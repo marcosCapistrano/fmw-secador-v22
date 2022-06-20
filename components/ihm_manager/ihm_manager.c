@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "common_ihm.h"
+#include "common_state.h"
 #include "driver/uart.h"
 #include "esp_log.h"
 #include "esp_nextion.h"
@@ -10,17 +12,16 @@
 #include "freertos/queue.h"
 #include "freertos/task.h"
 
-#include "common_state.h"
-#include "common_ihm.h"
-
 #define BUF2_SIZE (1024)
 #define RD_BUF2_SIZE (BUF2_SIZE)
 #define EX_UART_NUM UART_NUM_2
 
 static const char *TAG = "IHM_MANAGER";
 
-static void ihm_interpret_data(uint8_t *data, uint8_t size);
-static void ihm_change_page_to(uint8_t page_number);
+static void ihm_send_update(ihm_manager_t ihm_manager, state_msg_type_t type, state_target_t target, uint8_t value);
+static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t size);
+static void ihm_change_page_to(int page_number);
+static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num);
 static int uart_write(const char *data);
 void ihm_send(const char *data);
 
@@ -30,7 +31,7 @@ ihm_manager_t ihm_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t 
     ihm_manager->state_manager_queue = state_manager_queue;
     ihm_manager->ihm_update_queue = ihm_update_queue;
 
-    ihm_change_page_to(0);
+    ihm_send_update(ihm_manager, REQUEST, FINISHED, 0);
 
     return ihm_manager;
 }
@@ -44,14 +45,11 @@ void ihm_input_task(void *pvParameters) {
     for (;;) {
         if (xQueueReceive(ihm_manager->uart_queue, (void *)&event, portMAX_DELAY)) {
             bzero(dtmp, RD_BUF2_SIZE);
-            ESP_LOGI(TAG, "Uart Event!");
 
             switch (event.type) {
                 case UART_DATA:
-                    ESP_LOGI(TAG, "[UART DATA]: %d bytes", event.size);
                     uart_read_bytes(EX_UART_NUM, dtmp, event.size, portMAX_DELAY);
-                    ihm_interpret_data(dtmp, event.size);
-                    ESP_LOG_BUFFER_HEXDUMP(TAG, dtmp, event.size, ESP_LOG_INFO);
+                    ihm_process_data(ihm_manager, dtmp, event.size);
                     break;
 
                 default:
@@ -68,13 +66,15 @@ void ihm_update_task(void *pvParameters) {
 
     for (;;) {
         if (xQueueReceive(ihm_manager->ihm_update_queue, (void *)&event, portMAX_DELAY)) {
-            ESP_LOGI(TAG, "UPDATE Event!");
-            switch(event->type) {
+            switch (event->type) {
                 case PAGE:
                     ihm_change_page_to(event->value);
                     break;
 
-                    default:
+                case VALUE:
+                    ihm_change_value_to(event->target_id, event->value, ihm_manager->current_page);
+                    break;
+                default:
 
                     break;
             }
@@ -82,40 +82,183 @@ void ihm_update_task(void *pvParameters) {
     }
 }
 
-static void ihm_interpret_data(uint8_t *data, uint8_t size) {
-    if(size == 5) {
-        if(data[0] == 102) {
-            ESP_LOGI(TAG, "Page Changed to: %d!!", data[1]);
-        }
-    } else if(size == 7) {
-        if(data[0] == 101) {
-            //Clicked something
-            if(data[1] == 3) {
-                //On page 3
+static int index_command_end(uint8_t *data, int from) {
+    int count = from;
 
-                if(data[2] == 3) {
-                    //Palaha Lenha
-                    ESP_LOGI(TAG, "Clicked palha/lenha");
-                }
-            }
-        }
+    while (data[count] != 255) {
+        count++;
     }
 
-    ESP_LOGI(TAG, "0: %d", data[0]);
-    ESP_LOGI(TAG, "1: %d", data[1]);
-    ESP_LOGI(TAG, "2: %d", data[2]);
-    ESP_LOGI(TAG, "3: %d", data[3]);
-    ESP_LOGI(TAG, "4: %d", data[4]);
-    ESP_LOGI(TAG, "5: %d", data[5]);
-    ESP_LOGI(TAG, "6: %d", data[6]);
-    ESP_LOGI(TAG, "7: %d", data[7]);
-    ESP_LOGI(TAG, "8: %d", data[8]);
-    ESP_LOGI(TAG, "9: %d", data[9]);
+    return count += 2;
 }
 
-static void ihm_change_page_to(uint8_t page_number) {
+static uint8_t calculate_value(uint8_t a, uint8_t b, uint8_t c, uint8_t d) {
+    return a + b * 256 + c * 65536 + d * 16777216;
+}
+
+static void ihm_send_update(ihm_manager_t ihm_manager, state_msg_type_t type, state_target_t target, uint8_t value) {
+    state_msg_t state_msg = state_msg_create(type, target, value);
+    xQueueSend(ihm_manager->state_manager_queue, &state_msg, portMAX_DELAY);
+}
+
+static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t size) {
+    int index = 0;
+    int start = 0;
+    int end = size;
+
+    while (index < end) {
+        const uint8_t *head = data[index];
+        int current_end = index_command_end(data, index);
+
+        if (head == 101) {                         // Click event
+            if (ihm_manager->current_page == 3) {  // Toggle palha/lenha
+                if (data[index + 2 == 3]) {
+                    ihm_send_update(ihm_manager, UPDATE, MODE, 0);
+                }
+            } else if (ihm_manager->current_page == 7) {  // Finalizar
+                ihm_send_update(ihm_manager, UPDATE, FINISHED, 1);
+            } else if (ihm_manager->current_page == 1) {  // Finalizar
+            ESP_LOGI(TAG, "Updating finished");
+                ihm_send_update(ihm_manager, UPDATE, FINISHED, 0);
+            }
+        } else if (head == 102) {  // Page event
+            ihm_manager->current_page = data[index + 1];
+
+            if (data[index + 1] == 1) {
+                ihm_send_update(ihm_manager, REQUEST, LOTE_NUMBER, 0);
+            } else if (data[index + 1] == 3) {
+                ihm_send_update(ihm_manager, REQUEST, LOTE_NUMBER, 0);
+                ihm_send_update(ihm_manager, REQUEST, MODE, 0);
+                ihm_send_update(ihm_manager, REQUEST, SENSOR_ENTRADA, 0);
+                ihm_send_update(ihm_manager, REQUEST, SENSOR_MASSA_1, 0);
+                ihm_send_update(ihm_manager, REQUEST, SENSOR_MASSA_2, 0);
+            } else if (data[index + 1] == 4) {
+                ihm_send_update(ihm_manager, REQUEST, ENTRADA_MIN, 0);
+                ihm_send_update(ihm_manager, REQUEST, ENTRADA_MAX, 0);
+            } else if (data[index + 1] == 5) {
+                ihm_send_update(ihm_manager, REQUEST, MASSA_1_MIN, 0);
+                ihm_send_update(ihm_manager, REQUEST, MASSA_1_MAX, 0);
+            } else if (data[index + 1] == 6) {
+                ihm_send_update(ihm_manager, REQUEST, MASSA_2_MIN, 0);
+                ihm_send_update(ihm_manager, REQUEST, MASSA_2_MAX, 0);
+            }
+        } else if (head == 113) {
+            if (ihm_manager->current_page == 4) {  // Entrada page
+                ihm_send_update(ihm_manager, UPDATE, ENTRADA_MIN, calculate_value(data[index + 1], data[index + 2], data[index + 3], data[index + 4]));
+                index = current_end + 1;
+                current_end = index_command_end(data, index);
+
+                ihm_send_update(ihm_manager, UPDATE, ENTRADA_MAX, calculate_value(data[index + 1], data[index + 2], data[index + 3], data[index + 4]));
+            } else if (ihm_manager->current_page == 5) {
+                ihm_send_update(ihm_manager, UPDATE, MASSA_1_MIN, calculate_value(data[index + 1], data[index + 2], data[index + 3], data[index + 4]));
+                index = current_end + 1;
+                current_end = index_command_end(data, index);
+                ihm_send_update(ihm_manager, UPDATE, MASSA_1_MAX, calculate_value(data[index + 1], data[index + 2], data[index + 3], data[index + 4]));
+            } else if (ihm_manager->current_page == 6) {
+                ihm_send_update(ihm_manager, UPDATE, MASSA_2_MIN, calculate_value(data[index + 1], data[index + 2], data[index + 3], data[index + 4]));
+                index = current_end + 1;
+                current_end = index_command_end(data, index);
+                ihm_send_update(ihm_manager, UPDATE, MASSA_2_MAX, calculate_value(data[index + 1], data[index + 2], data[index + 3], data[index + 4]));
+            }
+        }
+
+        index = current_end + 1;
+    }
+}
+
+static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
+    char command_str[30];
+    char target_str[15];
+
+    if (page_num == 3) {
+        if (target == 3) {
+            sprintf(target_str, "bPalhaLenha");
+            if (value == 1) {
+                value = 15;
+            } else {
+                value = 16;
+            }
+
+            sprintf(command_str, "%s.pic=%d", target_str, value);
+            ihm_send(command_str);
+        } else if (target == 7) {
+            sprintf(target_str, "nEntrada");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        } else if (target == 8) {
+            sprintf(target_str, "nMassa1");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        } else if (target == 9) {
+            sprintf(target_str, "nMassa2");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        }
+    } else if (page_num == 4) {
+        if (target == 7) {
+            sprintf(target_str, "nMinEntrada");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        } else if (target == 8) {
+            sprintf(target_str, "nMaxEntrada");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        }
+    } else if (page_num == 5) {
+        if (target == 7) {
+            sprintf(target_str, "nMinMassa1");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        } else if (target == 8) {
+            sprintf(target_str, "nMaxMassa1");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        }
+    } else if (page_num == 6) {
+        if (target == 7) {
+            sprintf(target_str, "nMinMassa2");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        } else if (target == 8) {
+            sprintf(target_str, "nMaxMassa2");
+            sprintf(command_str, "%s.val=%d", target_str, value);
+            ihm_send(command_str);
+
+            sprintf(command_str, "%s.pco=65535", target_str);
+            ihm_send(command_str);
+        }
+    }
+}
+
+static void ihm_change_page_to(int page_number) {
     char page_str[10];
     sprintf(page_str, "page %d", page_number);
+
+    ESP_LOGI(TAG, "Sending: %s", page_str);
     ihm_send(page_str);
 }
 

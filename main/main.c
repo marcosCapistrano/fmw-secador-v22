@@ -27,4 +27,5 @@ void app_main(void) {
 
     xTaskCreate(ihm_input_task, "UART INPUT TASK", 2048, ihm_manager, 5, NULL);
     xTaskCreate(ihm_update_task, "IHM UPDATE TASK", 2048, ihm_manager, 5, NULL);
+    xTaskCreate(state_manager_task, "STATE MANAGER TASK", 2048, state_manager, 5, NULL);
 }

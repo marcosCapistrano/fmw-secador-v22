@@ -9,5 +9,16 @@
   ],
   "idf.port": "/dev/ttyUSB0",
   "idf.pythonBinPath": "/home/marcoscapistrano/.espressif/python_env/idf4.4_py3.8_env/bin/python",
-  "idf.toolsPath": "/home/marcoscapistrano/.espressif"
+  "idf.toolsPath": "/home/marcoscapistrano/.espressif",
+  "files.associations": {
+    "array": "c",
+    "chrono": "c",
+    "functional": "c",
+    "istream": "c",
+    "ostream": "c",
+    "ratio": "c",
+    "tuple": "c",
+    "type_traits": "c",
+    "utility": "c"
+  }
 }
