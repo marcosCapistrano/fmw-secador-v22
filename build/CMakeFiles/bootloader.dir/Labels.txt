@@ -1,0 +1,13 @@
+# Target labels
+ bootloader
+# Source files and their labels
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/CMakeFiles/bootloader
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/CMakeFiles/bootloader.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/CMakeFiles/bootloader-complete.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule
