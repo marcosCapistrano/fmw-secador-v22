@@ -68,6 +68,8 @@ void ihm_update_task(void *pvParameters) {
         if (xQueueReceive(ihm_manager->ihm_update_queue, (void *)&event, portMAX_DELAY)) {
             switch (event->type) {
                 case PAGE:
+                    ihm_manager->current_page = event->value;
+                    ESP_LOGI(TAG, "Current page: %d", ihm_manager->current_page);
                     ihm_change_page_to(event->value);
                     break;
 
@@ -110,6 +112,7 @@ static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t s
         const uint8_t *head = data[index];
         int current_end = index_command_end(data, index);
 
+        ESP_LOGI(TAG, "Current page: %d", ihm_manager->current_page);
         if (head == 101) {                         // Click event
             if (ihm_manager->current_page == 3) {  // Toggle palha/lenha
                 if (data[index + 2 == 3]) {
@@ -118,11 +121,12 @@ static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t s
             } else if (ihm_manager->current_page == 7) {  // Finalizar
                 ihm_send_update(ihm_manager, UPDATE, FINISHED, 1);
             } else if (ihm_manager->current_page == 1) {  // Finalizar
-            ESP_LOGI(TAG, "Updating finished");
+                ESP_LOGI(TAG, "Updating finished");
                 ihm_send_update(ihm_manager, UPDATE, FINISHED, 0);
             }
         } else if (head == 102) {  // Page event
             ihm_manager->current_page = data[index + 1];
+                    ESP_LOGI(TAG, "Current page: %d", ihm_manager->current_page);
 
             if (data[index + 1] == 1) {
                 ihm_send_update(ihm_manager, REQUEST, LOTE_NUMBER, 0);

@@ -12,8 +12,11 @@ typedef struct s_state_manager_t {
     uint8_t lote_number;
 
     uint8_t sensor_entrada;
+
     uint8_t sensor_massa_1;
+    time_t last_sensor_massa_1;
     uint8_t sensor_massa_2;
+    time_t last_sensor_massa_2;
 
     uint8_t sensor_entrada_min;
     uint8_t sensor_entrada_max;
@@ -27,9 +30,10 @@ typedef struct s_state_manager_t {
     nvs_handle_t nvs_handle;
     QueueHandle_t ihm_update_queue;
     QueueHandle_t state_manager_queue;
+    QueueHandle_t peripherals_update_queue;
 } s_state_manager_t;
 
-state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t ihm_update_queue);
+state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t ihm_update_queue, QueueHandle_t peripherals_update_queue);
 
 void state_manager_task(void *pvParameters);
 

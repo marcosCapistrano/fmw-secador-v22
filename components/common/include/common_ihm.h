@@ -1,5 +1,5 @@
-#ifndef COMMON_IHM_H
-#define COMMON_IHM_H
+#ifndef COMMON_PERIF_H
+#define COMMON_PERIF_H
 
 #include "inttypes.h"
 

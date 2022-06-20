@@ -8,7 +8,7 @@
 #define KEY_LOTE_NUM "lote_number"
 #define KEY_SENSOR_ENTRADA "s_entrada"
 #define KEY_SENSOR_MASSA_1 "s_m1"
-#define KEY_SENSOR_MASSA_2 "s_m1"
+#define KEY_SENSOR_MASSA_2 "s_m2"
 #define KEY_SENSOR_ENTRADA_MIN "s_entrada_min"
 #define KEY_SENSOR_ENTRADA_MAX "s_entrada_max"
 #define KEY_SENSOR_MASSA_1_MIN "s_m1_min"

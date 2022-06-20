@@ -3,3 +3,4 @@ source "/home/marcoscapistrano/esp/esp-idf/components/bootloader/Kconfig.projbui
 source "/home/marcoscapistrano/esp/esp-idf/components/esp_rom/Kconfig.projbuild"
 source "/home/marcoscapistrano/esp/esp-idf/components/esptool_py/Kconfig.projbuild"
 source "/home/marcoscapistrano/esp/esp-idf/components/partition_table/Kconfig.projbuild"
+source "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/components/my_http_server/Kconfig.projbuild"

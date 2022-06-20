@@ -19,6 +19,10 @@
     "ratio": "c",
     "tuple": "c",
     "type_traits": "c",
-    "utility": "c"
+    "utility": "c",
+    "*.tcc": "c",
+    "optional": "c",
+    "system_error": "c",
+    "regex": "c"
   }
 }

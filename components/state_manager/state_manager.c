@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "common_ihm.h"
+#include "common_perif.h"
 #include "common_state.h"
 #include "esp_log.h"
 #include "esp_system.h"
@@ -15,9 +16,10 @@
 
 static const char *TAG = "STATE MANAGER";
 
+static void perif_send(QueueHandle_t peripherals_update_queue, perif_event_t type, perif_t target, perif_resp_t resp_type, uint8_t value);
 static void ihm_send(QueueHandle_t ihm_update_queue, ihm_event_t type, uint8_t target_id, uint8_t value);
 
-state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t ihm_update_queue) {
+state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t ihm_update_queue, QueueHandle_t peripherals_update_queue) {
     state_manager_t state_manager = 0;
 
     // Checa a EEPROM se estamos começando ou dando andamento em uma seca
@@ -38,6 +40,7 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
         state_manager->nvs_handle = nvs_handle;
         state_manager->ihm_update_queue = ihm_update_queue;
         state_manager->state_manager_queue = state_manager_queue;
+        state_manager->peripherals_update_queue = peripherals_update_queue;
 
         ESP_ERROR_CHECK(storage_get_mode(nvs_handle, &state_manager->mode));
         ESP_ERROR_CHECK(storage_get_lote_number(nvs_handle, &state_manager->lote_number));
@@ -68,11 +71,13 @@ void state_manager_task(void *pvParameters) {
     state_manager_t state_manager = (state_manager_t)pvParameters;
     nvs_handle_t nvs_handle = state_manager->nvs_handle;
     QueueHandle_t ihm_update_queue = state_manager->ihm_update_queue;
+    QueueHandle_t peripherals_update_queue = state_manager->peripherals_update_queue;
 
     state_msg_t event;
 
     for (;;) {
         if (xQueueReceive(state_manager->state_manager_queue, (void *)&event, portMAX_DELAY)) {
+            ESP_LOGI(TAG, "Received event!");
             switch (event->msg_type) {
                 case UPDATE:
                     ESP_LOGI(TAG, "Received event of type: update with value: %d", event->value);
@@ -86,6 +91,26 @@ void state_manager_task(void *pvParameters) {
 
                             storage_set_mode(nvs_handle, state_manager->mode);
                             ihm_send(ihm_update_queue, VALUE, 3, state_manager->mode);
+                            break;
+
+                        case SENSOR_ENTRADA:
+                            state_manager->sensor_entrada = event->value;
+                            storage_set_sensor_entrada(nvs_handle, state_manager->sensor_entrada);
+                            ihm_send(ihm_update_queue, VALUE, 7, state_manager->sensor_entrada);
+                            break;
+
+                        case SENSOR_MASSA_1:
+                            state_manager->sensor_massa_1 = event->value;
+                            state_manager->last_sensor_massa_1 = esp_timer_get_time();
+                            storage_set_sensor_massa_1(nvs_handle, state_manager->sensor_massa_1);
+                            ihm_send(ihm_update_queue, VALUE, 8, state_manager->sensor_massa_1);
+                            break;
+
+                        case SENSOR_MASSA_2:
+                            state_manager->sensor_massa_2 = event->value;
+                            state_manager->last_sensor_massa_1 = esp_timer_get_time();
+                            storage_set_sensor_massa_2(nvs_handle, state_manager->sensor_massa_2);
+                            ihm_send(ihm_update_queue, VALUE, 9, state_manager->sensor_massa_2);
                             break;
 
                         case ENTRADA_MIN:
@@ -142,12 +167,20 @@ void state_manager_task(void *pvParameters) {
 
                         case SENSOR_MASSA_1:
                             storage_get_sensor_massa_1(nvs_handle, &state_manager->sensor_massa_1);
-                            ihm_send(ihm_update_queue, VALUE, 8, state_manager->sensor_massa_2);
+                            ihm_send(ihm_update_queue, VALUE, 8, state_manager->sensor_massa_1);
                             break;
 
                         case SENSOR_MASSA_2:
                             storage_get_sensor_massa_2(nvs_handle, &state_manager->sensor_massa_2);
                             ihm_send(ihm_update_queue, VALUE, 9, state_manager->sensor_massa_2);
+                            break;
+
+                        case LAST_SENSOR_MASSA_1:
+                            perif_send(peripherals_update_queue, PERIF_RESPONSE, PERIF_NONE, MASSA_1, state_manager->last_sensor_massa_1);
+                            break;
+
+                        case LAST_SENSOR_MASSA_2:
+                            perif_send(peripherals_update_queue, PERIF_RESPONSE, PERIF_NONE, MASSA_2, state_manager->last_sensor_massa_2);
                             break;
 
                         case ENTRADA_MIN:
@@ -198,6 +231,12 @@ void state_manager_task(void *pvParameters) {
             }
         }
     }
+}
+
+static void perif_send(QueueHandle_t peripherals_update_queue, perif_event_t type, perif_t target, perif_resp_t resp_type, uint8_t value) {
+    perif_update_t perif_update = perif_update_create(type, target, resp_type, value);
+
+    xQueueSend(peripherals_update_queue, &perif_update, portMAX_DELAY);
 }
 
 static void ihm_send(QueueHandle_t ihm_update_queue, ihm_event_t type, uint8_t target_id, uint8_t value) {
