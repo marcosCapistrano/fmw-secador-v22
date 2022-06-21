@@ -7,11 +7,19 @@
 #include "common_perif.h"
 #include "common_state.h"
 #include "driver/gpio.h"
+#include "ds18b20.h"
 #include "esp_log.h"
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+#include "owb.h"
+#include "owb_rmt.h"
+
+#define GPIO_DS18B20_0 (CONFIG_ONE_WIRE_GPIO)
+#define MAX_DEVICES (8)
+#define DS18B20_RESOLUTION (DS18B20_RESOLUTION_12_BIT)
+#define SAMPLE_PERIOD (1000)  // milliseconds
 
 #define PIN_QUEIMADOR 12
 #define PIN_BUZINA 13
@@ -70,8 +78,6 @@ void peripherals_update_task(void *pvParameters) {
 
     perif_update_t event;
 
-    state_msg_t event_entrada = state_msg_create(UPDATE, SENSOR_ENTRADA, 0);
-
     for (;;) {
         if (xQueueReceive(peripherals_manager->peripherals_update_queue, (void *)&event, pdMS_TO_TICKS(10000))) {
             // Recebe respostas e ações a serem feitas
@@ -99,6 +105,7 @@ void peripherals_update_task(void *pvParameters) {
                         } break;
 
                         case LED_ENTRADA_QUENTE: {
+                            ESP_LOGI(TAG, "Acting on LED_ENTRADA_QUENTE");
                             gpio_pad_select_gpio(PIN_LED_ENTRADA_QUENTE);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_ENTRADA_QUENTE, 0);
@@ -195,15 +202,49 @@ void peripherals_monitor_task(void *pvParameters) {
     peripherals_manager_t peripherals_manager = (peripherals_manager_t)pvParameters;
     QueueHandle_t state_manager_queue = peripherals_manager->state_manager_queue;
 
+    state_msg_t event_entrada = state_msg_create(UPDATE, SENSOR_ENTRADA, 0);
+
     state_msg_t event_request_last_m1 = state_msg_create(REQUEST, LAST_SENSOR_MASSA_1, 0);
     state_msg_t event_request_last_m2 = state_msg_create(REQUEST, LAST_SENSOR_MASSA_2, 0);
+
+    // Create a 1-Wire bus, using the RMT timeslot driver
+    OneWireBus *owb;
+    owb_rmt_driver_info rmt_driver_info;
+    owb = owb_rmt_initialize(&rmt_driver_info, GPIO_DS18B20_0, RMT_CHANNEL_1, RMT_CHANNEL_0);
+    owb_use_crc(owb, true);  // enable CRC check for ROM code
+
+    DS18B20_Info *device = 0;
+    DS18B20_Info *ds18b20_info = ds18b20_malloc();  // heap allocation
+    device = ds18b20_info;
+    ds18b20_init_solo(ds18b20_info, owb);
+
+    ds18b20_use_crc(ds18b20_info, true);  // enable CRC check on all reads
+    ds18b20_set_resolution(ds18b20_info, DS18B20_RESOLUTION);
+
+    bool parasitic_power = false;
+    ds18b20_check_for_parasite_power(owb, &parasitic_power);
+    if (parasitic_power) {
+        printf("Parasitic-powered devices detected");
+    }
+
+    // In parasitic-power mode, devices cannot indicate when conversions are complete,
+    // so waiting for a temperature conversion must be done by waiting a prescribed duration
+    owb_use_parasitic_power(owb, parasitic_power);
 
     for (;;) {
         xQueueSend(state_manager_queue, &event_request_last_m1, portMAX_DELAY);
         xQueueSend(state_manager_queue, &event_request_last_m2, portMAX_DELAY);
 
         // TODO pegar temperatura da ENTRADA e enviar tmb
+        ds18b20_convert_all(owb);
+        ds18b20_wait_for_conversion(device);
 
-        vTaskDelay(1000);
+        float reading = 0;
+        DS18B20_ERROR error = ds18b20_read_temp(device, &reading);
+
+        event_entrada->value = (uint8_t)reading;
+        xQueueSend(state_manager_queue, &event_entrada, portMAX_DELAY);
+
+        vTaskDelay(pdMS_TO_TICKS(10000));
     }
 }

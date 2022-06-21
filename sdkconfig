@@ -129,6 +129,13 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# esp32-ds18b20-example Configuration
+#
+CONFIG_ONE_WIRE_GPIO=15
+# CONFIG_ENABLE_STRONG_PULLUP_GPIO is not set
+# end of esp32-ds18b20-example Configuration
+
+#
 # HTTP Server Configuration
 #
 CONFIG_ESP_WIFI_SSID="myssid"

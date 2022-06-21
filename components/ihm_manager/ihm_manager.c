@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "freertos/task.h"
+#include "freertos/portmacro.h"
 
 #define BUF2_SIZE (1024)
 #define RD_BUF2_SIZE (BUF2_SIZE)
@@ -74,6 +75,9 @@ void ihm_update_task(void *pvParameters) {
                     break;
 
                 case VALUE:
+                    ESP_LOGI(TAG, "Change value: %d", event->value);
+                    ESP_LOGI(TAG, "Current Page: %d", ihm_manager->current_page);
+                    
                     ihm_change_value_to(event->target_id, event->value, ihm_manager->current_page);
                     break;
                 default:
@@ -126,11 +130,12 @@ static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t s
             }
         } else if (head == 102) {  // Page event
             ihm_manager->current_page = data[index + 1];
-                    ESP_LOGI(TAG, "Current page: %d", ihm_manager->current_page);
+            ESP_LOGI(TAG, "Current page: %d", ihm_manager->current_page);
 
             if (data[index + 1] == 1) {
                 ihm_send_update(ihm_manager, REQUEST, LOTE_NUMBER, 0);
             } else if (data[index + 1] == 3) {
+                ESP_LOGI(TAG, "RELOADING SHIT?");
                 ihm_send_update(ihm_manager, REQUEST, LOTE_NUMBER, 0);
                 ihm_send_update(ihm_manager, REQUEST, MODE, 0);
                 ihm_send_update(ihm_manager, REQUEST, SENSOR_ENTRADA, 0);
@@ -171,10 +176,22 @@ static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t s
 }
 
 static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
-    char command_str[30];
+    char command_str[45];
     char target_str[15];
 
-    if (page_num == 3) {
+    if(page_num == 1) {
+        if(target == 1) {
+            sprintf(target_str, "tNewLote");
+            sprintf(command_str, "%s.val=\"Lote %d\"", target_str, value);
+            ihm_send(command_str);
+        }
+
+    } else if (page_num == 3) {
+        if(target == 1) {
+            sprintf(target_str, "tOldLote");
+            sprintf(command_str, "%s.val=\"Lote %d em andamento\"", target_str, value);
+            ihm_send(command_str);
+        }
         if (target == 3) {
             sprintf(target_str, "bPalhaLenha");
             if (value == 1) {
@@ -184,6 +201,8 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             }
 
             sprintf(command_str, "%s.pic=%d", target_str, value);
+            ESP_LOGI(TAG, "%s", command_str);
+            ihm_send(command_str);
             ihm_send(command_str);
         } else if (target == 7) {
             sprintf(target_str, "nEntrada");
@@ -267,9 +286,12 @@ static void ihm_change_page_to(int page_number) {
 }
 
 void ihm_send(const char *data) {
+    portMUX_TYPE myMutex = portMUX_INITIALIZER_UNLOCKED;
+    taskENTER_CRITICAL(&myMutex);
     uart_write("\xFF\xFF\xFF");
     uart_write(data);
     uart_write("\xFF\xFF\xFF");
+    taskEXIT_CRITICAL(&myMutex);
 }
 
 static int uart_write(const char *data) {

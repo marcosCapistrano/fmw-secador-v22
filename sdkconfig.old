@@ -129,6 +129,13 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# esp32-ds18b20-example Configuration
+#
+CONFIG_ONE_WIRE_GPIO=4
+# CONFIG_ENABLE_STRONG_PULLUP_GPIO is not set
+# end of esp32-ds18b20-example Configuration
+
+#
 # HTTP Server Configuration
 #
 CONFIG_ESP_WIFI_SSID="myssid"
@@ -391,7 +398,7 @@ CONFIG_HTTPD_MAX_URI_LEN=512
 CONFIG_HTTPD_ERR_RESP_NO_DELAY=y
 CONFIG_HTTPD_PURGE_BUF_LEN=32
 # CONFIG_HTTPD_LOG_PURGE_DATA is not set
-# CONFIG_HTTPD_WS_SUPPORT is not set
+CONFIG_HTTPD_WS_SUPPORT=y
 # end of HTTP Server
 
 #

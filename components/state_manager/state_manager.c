@@ -57,6 +57,8 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
 
         ESP_LOGI(TAG, "carregados valores do nvs");
 
+        vTaskDelay(pdMS_TO_TICKS(2000));
+        ESP_LOGI(TAG, "finished: %d", state_manager->finished);
         if (state_manager->finished == 0) {
             ihm_send(ihm_update_queue, PAGE, 0, 2);
         } else {
@@ -65,6 +67,75 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
     }
 
     return state_manager;
+}
+
+static void check_sensor_entrada(state_manager_t state_manager) {
+    QueueHandle_t peripherals_update_queue = state_manager->peripherals_update_queue;
+
+    uint8_t min = state_manager->sensor_entrada_min;
+    uint8_t max = state_manager->sensor_entrada_max;
+    uint8_t current = state_manager->sensor_entrada;
+
+    if (current > max) {
+        // Avisar temperatura alta
+        perif_send(peripherals_update_queue, ACT, QUEIMADOR, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
+
+        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 1);
+    } else if (current < min) {
+        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
+
+        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, QUEIMADOR, PERIF_RESP_NONE, 1);
+        // Avisar temperatura baixa
+    } else {
+        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
+
+        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, QUEIMADOR, PERIF_RESP_NONE, 1);
+    }
+}
+
+static void check_sensor_massa_1(state_manager_t state_manager) {
+    QueueHandle_t peripherals_update_queue = state_manager->peripherals_update_queue;
+
+    uint8_t min = state_manager->sensor_massa_1_min;
+    uint8_t max = state_manager->sensor_massa_1_max;
+    uint8_t current = state_manager->sensor_massa_1;
+
+    if (current > max) {
+        // Avisar temperatura alta
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 1);
+    } else if (current < min) {
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
+        // Avisar temperatura baixa
+    } else {
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
+    }
+}
+
+static void check_sensor_massa_2(state_manager_t state_manager) {
+    QueueHandle_t peripherals_update_queue = state_manager->peripherals_update_queue;
+
+    uint8_t min = state_manager->sensor_massa_2_min;
+    uint8_t max = state_manager->sensor_massa_2_max;
+    uint8_t current = state_manager->sensor_massa_2;
+
+    if (current > max) {
+        // Avisar temperatura alta
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 1);
+    } else if (current < min) {
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
+        // Avisar temperatura baixa
+    } else {
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
+    }
 }
 
 void state_manager_task(void *pvParameters) {
@@ -97,6 +168,8 @@ void state_manager_task(void *pvParameters) {
                             state_manager->sensor_entrada = event->value;
                             storage_set_sensor_entrada(nvs_handle, state_manager->sensor_entrada);
                             ihm_send(ihm_update_queue, VALUE, 7, state_manager->sensor_entrada);
+
+                            check_sensor_entrada(state_manager);
                             break;
 
                         case SENSOR_MASSA_1:
@@ -104,6 +177,8 @@ void state_manager_task(void *pvParameters) {
                             state_manager->last_sensor_massa_1 = esp_timer_get_time();
                             storage_set_sensor_massa_1(nvs_handle, state_manager->sensor_massa_1);
                             ihm_send(ihm_update_queue, VALUE, 8, state_manager->sensor_massa_1);
+
+                            check_sensor_massa_1(state_manager);
                             break;
 
                         case SENSOR_MASSA_2:
@@ -111,6 +186,8 @@ void state_manager_task(void *pvParameters) {
                             state_manager->last_sensor_massa_1 = esp_timer_get_time();
                             storage_set_sensor_massa_2(nvs_handle, state_manager->sensor_massa_2);
                             ihm_send(ihm_update_queue, VALUE, 9, state_manager->sensor_massa_2);
+
+                            check_sensor_massa_2(state_manager);
                             break;
 
                         case ENTRADA_MIN:
@@ -158,6 +235,11 @@ void state_manager_task(void *pvParameters) {
                         case MODE:
                             storage_get_mode(nvs_handle, &state_manager->mode);
                             ihm_send(ihm_update_queue, VALUE, 3, state_manager->mode);
+                            break;
+
+                        case LOTE_NUMBER:
+                            storage_get_mode(nvs_handle, &state_manager->lote_number);
+                            ihm_send(ihm_update_queue, VALUE, 1, state_manager->lote_number);
                             break;
 
                         case SENSOR_ENTRADA:
@@ -214,11 +296,19 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case FINISHED:
+                            ESP_LOGI(TAG, "Recebido finished");
                             storage_get_finished(nvs_handle, &state_manager->finished);
+
                             if (state_manager->finished == 0) {
-                                ihm_send(ihm_update_queue, PAGE, 2, state_manager->finished);
+                                state_manager->finished = 1;
+                                state_manager->lote_number++;
+                                storage_set_finished(nvs_handle, state_manager->finished);
+                                storage_set_lote_number(nvs_handle, state_manager->lote_number);
+                                // ihm_send(ihm_update_queue, PAGE, 0, 2);
                             } else {
-                                ihm_send(ihm_update_queue, PAGE, 1, state_manager->finished);
+                                state_manager->finished = 0;
+                                storage_set_finished(nvs_handle, state_manager->finished);
+                                // ihm_send(ihm_update_queue, PAGE, 0, 1);
                             }
 
                         default:

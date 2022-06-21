@@ -131,7 +131,12 @@ esp_err_t storage_get_u8(nvs_handle_t nvs_handle, const char *key, uint8_t *out_
 
     if (err != ESP_OK) {
         if (err == ESP_ERR_NVS_NOT_FOUND) {
-            storage_set_u8(nvs_handle, key, 0);
+            // if (key == KEY_FINISHED || key == KEY_LOTE_NUM) {
+                // storage_set_u8(nvs_handle, key, 1);
+            // } else {
+                storage_set_u8(nvs_handle, key, 0);
+            // }
+
             return storage_get_u8(nvs_handle, key, out_value);
         }
         ESP_LOGE(TAG, "Erro ao procurar valor: %s", key);
