@@ -30,11 +30,11 @@ void app_main(void) {
     state_manager_t state_manager = state_manager_init(state_manager_queue, ihm_update_queue, peripherals_update_queue);
     peripherals_manager_t peripherals_manager = peripherals_manager_init(state_manager_queue, peripherals_update_queue);
 
-    http_server_init(state_manager_queue, server_update_queue);
+    // http_server_init(state_manager_queue, server_update_queue);
 
     xTaskCreatePinnedToCore(ihm_input_task, "UART INPUT TASK", 2048, ihm_manager, 4, NULL, 1);
     xTaskCreatePinnedToCore(ihm_update_task, "IHM UPDATE TASK", 2048, ihm_manager, 3, NULL, 1);
     xTaskCreatePinnedToCore(state_manager_task, "STATE MANAGER TASK", 2048, state_manager, 5, NULL, 1);
-    xTaskCreatePinnedToCore(peripherals_update_task, "PERIF MANAGER TASK", 2048, peripherals_manager, 1, NULL, 0);
+    xTaskCreatePinnedToCore(peripherals_update_task, "PERIF MANAGER TASK", 4096, peripherals_manager, 1, NULL, 0);
     xTaskCreatePinnedToCore(peripherals_monitor_task, "PERIF MANAGER TASK", 2048, peripherals_manager, 2, NULL, 0);
 }

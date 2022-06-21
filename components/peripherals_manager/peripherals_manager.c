@@ -105,7 +105,6 @@ void peripherals_update_task(void *pvParameters) {
                         } break;
 
                         case LED_ENTRADA_QUENTE: {
-                            ESP_LOGI(TAG, "Acting on LED_ENTRADA_QUENTE");
                             gpio_pad_select_gpio(PIN_LED_ENTRADA_QUENTE);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_ENTRADA_QUENTE, 0);

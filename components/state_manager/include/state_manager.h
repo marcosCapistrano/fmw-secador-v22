@@ -25,6 +25,10 @@ typedef struct s_state_manager_t {
     uint8_t sensor_massa_2_min;
     uint8_t sensor_massa_2_max;
 
+    _Bool is_aware_entrada;
+    _Bool is_aware_massa_1;
+    _Bool is_aware_massa_2;
+
     uint8_t finished;  // Indica se terminamos a seca ou não
 
     nvs_handle_t nvs_handle;

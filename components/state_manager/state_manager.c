@@ -42,6 +42,10 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
         state_manager->state_manager_queue = state_manager_queue;
         state_manager->peripherals_update_queue = peripherals_update_queue;
 
+        state_manager->is_aware_entrada = false;
+        state_manager->is_aware_massa_1 = false;
+        state_manager->is_aware_massa_2 = false;
+
         ESP_ERROR_CHECK(storage_get_mode(nvs_handle, &state_manager->mode));
         ESP_ERROR_CHECK(storage_get_lote_number(nvs_handle, &state_manager->lote_number));
         ESP_ERROR_CHECK(storage_get_sensor_entrada(nvs_handle, &state_manager->sensor_entrada));
@@ -58,12 +62,12 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
         ESP_LOGI(TAG, "carregados valores do nvs");
 
         vTaskDelay(pdMS_TO_TICKS(2000));
-        ESP_LOGI(TAG, "finished: %d", state_manager->finished);
-        if (state_manager->finished == 0) {
-            ihm_send(ihm_update_queue, PAGE, 0, 2);
-        } else {
-            ihm_send(ihm_update_queue, PAGE, 0, 1);
-        }
+        // ESP_LOGI(TAG, "finished: %d", state_manager->finished);
+        // if (state_manager->finished == 0) {
+        //     ihm_send(ihm_update_queue, PAGE, 0, 2);
+        // } else {
+        //     ihm_send(ihm_update_queue, PAGE, 0, 1);
+        // }
     }
 
     return state_manager;
@@ -148,10 +152,8 @@ void state_manager_task(void *pvParameters) {
 
     for (;;) {
         if (xQueueReceive(state_manager->state_manager_queue, (void *)&event, portMAX_DELAY)) {
-            ESP_LOGI(TAG, "Received event!");
             switch (event->msg_type) {
                 case UPDATE:
-                    ESP_LOGI(TAG, "Received event of type: update with value: %d", event->value);
                     switch (event->target) {
                         case MODE:
                             if (state_manager->mode == 0) {
@@ -221,10 +223,12 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case FINISHED:
-                            ESP_LOGI(TAG, "Updating finished to: %d", event->value);
+                            storage_get_lote_number(nvs_handle, &state_manager->lote_number);
                             state_manager->finished = event->value;
-                            storage_set_finished(nvs_handle, state_manager->finished);
+                            state_manager->lote_number = state_manager->lote_number + 1;
 
+                            storage_set_finished(nvs_handle, state_manager->finished);
+                            storage_set_lote_number(nvs_handle, state_manager->lote_number);
                         default:
                             break;
                     }
@@ -238,7 +242,7 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case LOTE_NUMBER:
-                            storage_get_mode(nvs_handle, &state_manager->lote_number);
+                            storage_get_lote_number(nvs_handle, &state_manager->lote_number);
                             ihm_send(ihm_update_queue, VALUE, 1, state_manager->lote_number);
                             break;
 
@@ -296,20 +300,14 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case FINISHED:
-                            ESP_LOGI(TAG, "Recebido finished");
                             storage_get_finished(nvs_handle, &state_manager->finished);
 
                             if (state_manager->finished == 0) {
-                                state_manager->finished = 1;
-                                state_manager->lote_number++;
-                                storage_set_finished(nvs_handle, state_manager->finished);
-                                storage_set_lote_number(nvs_handle, state_manager->lote_number);
-                                // ihm_send(ihm_update_queue, PAGE, 0, 2);
+                                ihm_send(ihm_update_queue, PAGE, 0, 2);
                             } else {
-                                state_manager->finished = 0;
-                                storage_set_finished(nvs_handle, state_manager->finished);
-                                // ihm_send(ihm_update_queue, PAGE, 0, 1);
+                                ihm_send(ihm_update_queue, PAGE, 0, 1);
                             }
+                            break;
 
                         default:
                             break;
