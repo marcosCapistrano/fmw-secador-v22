@@ -17,6 +17,12 @@
 #define KEY_SENSOR_MASSA_2_MAX "s_m2_max"
 #define KEY_FINISHED "finished"
 
+void storage_write_file(const char *path, const char *data);
+FILE *storage_open_file_r(const char *path);
+void storage_list_files();
+void storage_close_file(FILE *f);
+void storage_init();
+
 esp_err_t storage_get_mode(nvs_handle_t nvs_handle, uint8_t *mode);
 esp_err_t storage_set_mode(nvs_handle_t nvs_handle, uint8_t value);
 esp_err_t storage_get_lote_number(nvs_handle_t nvs_handle, uint8_t *lote_number);
@@ -41,6 +47,5 @@ esp_err_t storage_get_sensor_massa_2_max(nvs_handle_t nvs_handle, uint8_t *senso
 esp_err_t storage_set_sensor_massa_2_max(nvs_handle_t nvs_handle, uint8_t value);
 esp_err_t storage_get_finished(nvs_handle_t nvs_handle, uint8_t *finished);
 esp_err_t storage_set_finished(nvs_handle_t nvs_handle, uint8_t value);
-
 
 #endif

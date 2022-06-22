@@ -4,12 +4,15 @@
 #include "inttypes.h"
 
 typedef enum state_msg_type_t {
+	STATE_MSG_NONE,
+	PERIPHERAL_UPDATE,
 	UPDATE,
 	REQUEST,
 	RESPONSE
 } state_msg_type_t;
 
 typedef enum state_target_t {
+	STATE_TARGET_NONE,
 	MODE,
 	LOTE_NUMBER,
 
@@ -18,6 +21,9 @@ typedef enum state_target_t {
 	LAST_SENSOR_MASSA_1,
 	SENSOR_MASSA_2,
 	LAST_SENSOR_MASSA_2,
+	PERIPHERAL_BUZINA,
+	CONEXAO_1,
+	CONEXAO_2,
 	
 	ENTRADA_MIN,
 	ENTRADA_MAX,

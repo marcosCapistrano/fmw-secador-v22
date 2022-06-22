@@ -75,6 +75,6 @@
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp32-ds18b20/libesp32-ds18b20.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp_nextion/libesp_nextion.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/ihm_manager/libihm_manager.a
-/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/my_http_server/libmy_http_server.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/peripherals_manager/libperipherals_manager.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/state_manager/libstate_manager.a
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/server_manager/libserver_manager.a

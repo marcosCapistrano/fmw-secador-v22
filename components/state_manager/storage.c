@@ -1,7 +1,13 @@
 #include "storage.h"
 
+#include "dirent.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/semphr.h"
 #include "nvs.h"
+#include "stdlib.h"
+#include "sys/stat.h"
+#include "sys/unistd.h"
 
 static const char *TAG = "STORAGE";
 
@@ -9,6 +15,53 @@ static esp_err_t storage_get_i8(nvs_handle_t nvs_handle, const char *key, int8_t
 static esp_err_t storage_set_i8(nvs_handle_t nvs_handle, const char *key, int8_t value);
 static esp_err_t storage_get_u8(nvs_handle_t nvs_handle, const char *key, uint8_t *out_value);
 static esp_err_t storage_set_u8(nvs_handle_t nvs_handle, const char *key, uint8_t value);
+
+FILE *storage_open_file_r(const char *path) {
+    ESP_LOGI("TAG", "OPENING FILE: %s", path);
+    FILE *f = fopen(path, "r");
+    if (f == NULL) {
+        ESP_LOGE(TAG, "Failed to open file for writing");
+        return NULL;
+    }
+    return f;
+}
+
+FILE *storage_open_file_w(const char *path) {
+    FILE *f = fopen(path, "a");
+    if (f == NULL) {
+        ESP_LOGE(TAG, "Failed to open file for writing");
+        return NULL;
+    }
+
+    return f;
+}
+
+void storage_close_file(FILE *f) {
+    fclose(f);
+}
+
+void storage_write_file(const char *path, const char *data) {
+    ESP_LOGI("STORAGE", "WRITING FILE %s", path);
+    FILE *f = storage_open_file_w(path);
+    if (f == NULL) {
+        ESP_LOGE(TAG, "Failed to open file for writing");
+        return;
+    }
+
+    fprintf(f, "%s\n", data);
+    storage_close_file(f);
+}
+
+void storage_list_files() {
+    DIR *dir = opendir("/spiffs");
+    struct dirent *entry;
+
+    while ((entry = readdir(dir)) != NULL) {
+        char full_path[300];
+        sprintf(full_path, "/spiffs/%s", entry->d_name);
+        ESP_LOGI("FILES", "Found: %s", full_path);
+    }
+}
 
 esp_err_t storage_get_mode(nvs_handle_t nvs_handle, uint8_t *mode) {
     return storage_get_u8(nvs_handle, KEY_MODE, mode);
@@ -132,9 +185,9 @@ esp_err_t storage_get_u8(nvs_handle_t nvs_handle, const char *key, uint8_t *out_
     if (err != ESP_OK) {
         if (err == ESP_ERR_NVS_NOT_FOUND) {
             // if (key == KEY_FINISHED || key == KEY_LOTE_NUM) {
-                // storage_set_u8(nvs_handle, key, 1);
+            // storage_set_u8(nvs_handle, key, 1);
             // } else {
-                storage_set_u8(nvs_handle, key, 0);
+            storage_set_u8(nvs_handle, key, 0);
             // }
 
             return storage_get_u8(nvs_handle, key, out_value);

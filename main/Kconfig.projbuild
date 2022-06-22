@@ -1,5 +1,21 @@
-menu "esp32-ds18b20-example Configuration"
+menu "Ausyx Secador V2"
 
+menu "Servidor WEB"
+
+    config WIFI_AP_SSID
+        string "Wifi SSID para o AP"
+        default "Ausyx"
+        help 
+            SSID que os ESP8266 irão se conectar
+    
+    config WIFI_AP_PASS
+        string "Wifi PASSWORD para o AP"
+        default "ausyx"
+        help
+            Senha do SSID que os ESP8266 irão se conectar
+endmenu
+
+menu "Sensor Temperatura Físico DS18B20"
 config ONE_WIRE_GPIO
     int "OneWire GPIO number"
 	range 0 33
@@ -42,5 +58,6 @@ config STRONG_PULLUP_GPIO
 
 		GPIOs 34-39 are input-only so cannot be used to drive the One Wire Bus.
     depends on ENABLE_STRONG_PULLUP_GPIO
+endmenu
 
 endmenu

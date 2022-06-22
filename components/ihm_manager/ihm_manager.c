@@ -173,18 +173,18 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
     char target_str[15];
 
     if (page_num == 1) {
-        if (target == 1) {
+        if (target == TARGET_LOTE_NUMBER) {
             sprintf(target_str, "tNewLote");
             sprintf(command_str, "%s.txt=\"Lote %d\"", target_str, value);
             ihm_send(command_str);
             } 
     } else if (page_num == 3) {
-        if (target == 1) {
+        if (target == TARGET_LOTE_NUMBER) {
             sprintf(target_str, "tLoteAndamento");
             sprintf(command_str, "%s.txt=\"Lote %d em andamento\"", target_str, value);
             ihm_send(command_str);
         }
-        if (target == 3) {
+        if (target == TARGET_MODE) {
             sprintf(target_str, "bPalhaLenha");
             if (value == 1) {
                 value = 15;
@@ -196,21 +196,21 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             ihm_send(command_str);
             sprintf(command_str, "%s.pic2=%d", target_str, value);
             ihm_send(command_str);
-        } else if (target == 7) {
+        } else if (target == TARGET_ENTRADA) {
             sprintf(target_str, "nEntrada");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
 
             sprintf(command_str, "%s.pco=65535", target_str);
             ihm_send(command_str);
-        } else if (target == 8) {
+        } else if (target == TARGET_MASSA_1) {
             sprintf(target_str, "nMassa1");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
 
             sprintf(command_str, "%s.pco=65535", target_str);
             ihm_send(command_str);
-        } else if (target == 9) {
+        } else if (target == TARGET_MASSA_2) {
             sprintf(target_str, "nMassa2");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
@@ -219,14 +219,14 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             ihm_send(command_str);
         }
     } else if (page_num == 4) {
-        if (target == 7) {
+        if (target == TARGET_ENTRADA_MIN) {
             sprintf(target_str, "nMinEntrada");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
 
             sprintf(command_str, "%s.pco=65535", target_str);
             ihm_send(command_str);
-        } else if (target == 8) {
+        } else if (target == TARGET_ENTRADA_MAX) {
             sprintf(target_str, "nMaxEntrada");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
@@ -235,14 +235,14 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             ihm_send(command_str);
         }
     } else if (page_num == 5) {
-        if (target == 7) {
+        if (target == TARGET_MASSA_1_MIN) {
             sprintf(target_str, "nMinMassa1");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
 
             sprintf(command_str, "%s.pco=65535", target_str);
             ihm_send(command_str);
-        } else if (target == 8) {
+        } else if (target == TARGET_MASSA_1_MAX) {
             sprintf(target_str, "nMaxMassa1");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
@@ -251,14 +251,14 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             ihm_send(command_str);
         }
     } else if (page_num == 6) {
-        if (target == 7) {
+        if (target == TARGET_MASSA_2_MIN) {
             sprintf(target_str, "nMinMassa2");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
 
             sprintf(command_str, "%s.pco=65535", target_str);
             ihm_send(command_str);
-        } else if (target == 8) {
+        } else if (target == TARGET_MASSA_2_MAX) {
             sprintf(target_str, "nMaxMassa2");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);

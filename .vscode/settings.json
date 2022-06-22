@@ -23,6 +23,7 @@
     "*.tcc": "c",
     "optional": "c",
     "system_error": "c",
-    "regex": "c"
+    "regex": "c",
+    "*.inc": "c"
   }
 }

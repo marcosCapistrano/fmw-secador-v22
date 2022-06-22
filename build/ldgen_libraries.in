@@ -75,6 +75,6 @@ $<TARGET_FILE:__idf_esp32-owb>
 $<TARGET_FILE:__idf_esp32-ds18b20>
 $<TARGET_FILE:__idf_esp_nextion>
 $<TARGET_FILE:__idf_ihm_manager>
-$<TARGET_FILE:__idf_my_http_server>
 $<TARGET_FILE:__idf_peripherals_manager>
 $<TARGET_FILE:__idf_state_manager>
+$<TARGET_FILE:__idf_server_manager>

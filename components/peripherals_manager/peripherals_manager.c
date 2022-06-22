@@ -25,11 +25,12 @@
 #define PIN_BUZINA 13
 #define PIN_LED_MASSA_1_QUENTE 5
 #define PIN_LED_MASSA_1_FRIO 4
-#define PIN_LED_MASSA_2_QUENTE 5
-#define PIN_LED_MASSA_2_FRIO 4
+// #define PIN_LED_MASSA_2_QUENTE 34
+// #define PIN_LED_MASSA_2_FRIO 35
 #define PIN_LED_ENTRADA_QUENTE 0
 #define PIN_LED_ENTRADA_FRIO 2
-#define PIN_LED_CONEXAO 18
+#define PIN_LED_CONEXAO_1 18
+#define PIN_LED_CONEXAO_2 32
 #define PIN_SENSORT 15
 
 static const char *TAG = "PERIF MANAGER";
@@ -51,11 +52,11 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
     gpio_pad_select_gpio(PIN_LED_MASSA_1_FRIO);
     gpio_set_direction(PIN_LED_MASSA_1_FRIO, GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(PIN_LED_MASSA_2_QUENTE);
-    gpio_set_direction(PIN_LED_MASSA_2_QUENTE, GPIO_MODE_OUTPUT);
+    // gpio_pad_select_gpio(PIN_LED_MASSA_2_QUENTE);
+    // gpio_set_direction(PIN_LED_MASSA_2_QUENTE, GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(PIN_LED_MASSA_2_FRIO);
-    gpio_set_direction(PIN_LED_MASSA_2_FRIO, GPIO_MODE_OUTPUT);
+    // gpio_pad_select_gpio(PIN_LED_MASSA_2_FRIO);
+    // gpio_set_direction(PIN_LED_MASSA_2_FRIO, GPIO_MODE_OUTPUT);
 
     gpio_pad_select_gpio(PIN_LED_ENTRADA_QUENTE);
     gpio_set_direction(PIN_LED_ENTRADA_QUENTE, GPIO_MODE_OUTPUT);
@@ -63,8 +64,11 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
     gpio_pad_select_gpio(PIN_LED_ENTRADA_FRIO);
     gpio_set_direction(PIN_LED_ENTRADA_FRIO, GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(PIN_LED_CONEXAO);
-    gpio_set_direction(PIN_LED_CONEXAO, GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
+    gpio_set_direction(PIN_LED_CONEXAO_1, GPIO_MODE_OUTPUT);
+
+    gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
+    gpio_set_direction(PIN_LED_CONEXAO_2, GPIO_MODE_OUTPUT);
 
     gpio_pad_select_gpio(PIN_SENSORT);
     gpio_set_direction(PIN_SENSORT, GPIO_MODE_INPUT);
@@ -72,11 +76,20 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
     return peripherals_manager;
 }
 
+static void state_msg_send(QueueHandle_t state_manager_queue, state_msg_t state_msg, state_msg_type_t type, state_target_t target, uint8_t value) {
+    state_msg->msg_type = type;
+    state_msg->target = target;
+    state_msg->value = value;
+
+    xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
+}
+
 void peripherals_update_task(void *pvParameters) {
     peripherals_manager_t peripherals_manager = (peripherals_manager_t)pvParameters;
     QueueHandle_t state_manager_queue = peripherals_manager->state_manager_queue;
 
     perif_update_t event;
+    state_msg_t state_msg = state_msg_create(STATE_MSG_NONE, STATE_TARGET_NONE, 0);
 
     for (;;) {
         if (xQueueReceive(peripherals_manager->peripherals_update_queue, (void *)&event, pdMS_TO_TICKS(10000))) {
@@ -89,8 +102,12 @@ void peripherals_update_task(void *pvParameters) {
 
                             if (event->value == 1) {
                                 gpio_set_level(PIN_QUEIMADOR, 0);
+                                ESP_LOGI(TAG, "ligando queimador");
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, SENSOR_ENTRADA, 0);
                             } else {
+                                ESP_LOGI(TAG, "Desligando queimador");
                                 gpio_set_level(PIN_QUEIMADOR, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, SENSOR_ENTRADA, 1);
                             }
                         } break;
 
@@ -99,8 +116,10 @@ void peripherals_update_task(void *pvParameters) {
 
                             if (event->value == 1) {
                                 gpio_set_level(PIN_BUZINA, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, PERIPHERAL_BUZINA, 0);
                             } else {
                                 gpio_set_level(PIN_BUZINA, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, PERIPHERAL_BUZINA, 1);
                             }
                         } break;
 
@@ -108,8 +127,10 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_LED_ENTRADA_QUENTE);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_ENTRADA_QUENTE, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MAX, 0);
                             } else {
                                 gpio_set_level(PIN_LED_ENTRADA_QUENTE, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MAX, 1);
                             }
                         }
 
@@ -119,8 +140,10 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_LED_ENTRADA_FRIO);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_ENTRADA_FRIO, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MIN, 0);
                             } else {
                                 gpio_set_level(PIN_LED_ENTRADA_FRIO, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MIN, 1);
                             }
                         }
 
@@ -130,8 +153,10 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_LED_MASSA_1_QUENTE);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_MASSA_1_QUENTE, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MAX, 0);
                             } else {
                                 gpio_set_level(PIN_LED_MASSA_1_QUENTE, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MAX, 1);
                             }
                         } break;
 
@@ -139,28 +164,34 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_LED_MASSA_1_FRIO);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_MASSA_1_FRIO, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MIN, 0);
                             } else {
                                 gpio_set_level(PIN_LED_MASSA_1_FRIO, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MIN, 1);
                             }
                         } break;
 
-                        case LED_MASSA_2_QUENTE: {
-                            gpio_pad_select_gpio(PIN_LED_MASSA_2_QUENTE);
-                            if (event->value == 1) {
-                                gpio_set_level(PIN_LED_MASSA_2_QUENTE, 0);
-                            } else {
-                                gpio_set_level(PIN_LED_MASSA_2_QUENTE, 1);
-                            }
-                        } break;
+                            // case LED_MASSA_2_QUENTE: {
+                            //     gpio_pad_select_gpio(PIN_LED_MASSA_2_QUENTE);
+                            //     if (event->value == 1) {
+                            //         gpio_set_level(PIN_LED_MASSA_2_QUENTE, 0);
+                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MAX, 0);
+                            //     } else {
+                            //         gpio_set_level(PIN_LED_MASSA_2_QUENTE, 1);
+                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MIN, 1);
+                            //     }
+                            // } break;
 
-                        case LED_MASSA_2_FRIO: {
-                            gpio_pad_select_gpio(PIN_LED_MASSA_2_FRIO);
-                            if (event->value == 1) {
-                                gpio_set_level(PIN_LED_MASSA_2_FRIO, 0);
-                            } else {
-                                gpio_set_level(PIN_LED_MASSA_2_FRIO, 1);
-                            }
-                        } break;
+                            // case LED_MASSA_2_FRIO: {
+                            //     gpio_pad_select_gpio(PIN_LED_MASSA_2_FRIO);
+                            //     if (event->value == 1) {
+                            //         gpio_set_level(PIN_LED_MASSA_2_FRIO, 0);
+                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MIN, 0);
+                            //     } else {
+                            //         gpio_set_level(PIN_LED_MASSA_2_FRIO, 1);
+                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MIN, 1);
+                            //     }
+                            // } break;
 
                         default:
 
@@ -171,17 +202,32 @@ void peripherals_update_task(void *pvParameters) {
                 case PERIF_RESPONSE: {
                     int64_t curr_time = esp_timer_get_time();
                     int64_t last_time_sensor = event->value;
+                    ESP_LOGI(TAG, "LAST SENSOR: %d", (int)last_time_sensor);
 
                     switch (event->resp_type) {
                         case MASSA_1: {
-                            if (curr_time - last_time_sensor > 30000) {
-                                ESP_LOGI(TAG, "Desconectar a porra do led conexao");
+                            gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
+                            if (curr_time - last_time_sensor > 1 * 10E6) {
+                                ESP_LOGI("CONEXAO 1", "DESLIGANDO");
+                                gpio_set_level(PIN_LED_CONEXAO_1, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_1, 0);
+                            } else {
+                                ESP_LOGI("CONEXAO 1", "LIGANDO");
+                                gpio_set_level(PIN_LED_CONEXAO_1, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_1, 1);
                             }
                         } break;
 
                         case MASSA_2: {
-                            if (curr_time - last_time_sensor > 30000) {
-                                ESP_LOGI(TAG, "Desconectar a porra do led conexao");
+                            gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
+                            if (curr_time - last_time_sensor > 1 * 10E6) {
+                                ESP_LOGI("CONEXAO 2", "DESLIGANDO");
+                                gpio_set_level(PIN_LED_CONEXAO_2, 0);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_2, 0);
+                            } else {
+                                ESP_LOGI("CONEXAO 2", "LIGANDO");
+                                gpio_set_level(PIN_LED_CONEXAO_2, 1);
+                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_2, 1);
                             }
                         } break;
 

@@ -122,9 +122,9 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp32-ds18b20/cmake_install.cmake")
   include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp_nextion/cmake_install.cmake")
   include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/ihm_manager/cmake_install.cmake")
-  include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/my_http_server/cmake_install.cmake")
   include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/peripherals_manager/cmake_install.cmake")
   include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/state_manager/cmake_install.cmake")
+  include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/server_manager/cmake_install.cmake")
 
 endif()
 
