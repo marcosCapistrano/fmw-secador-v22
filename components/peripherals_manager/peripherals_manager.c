@@ -27,8 +27,8 @@
 #define PIN_LED_MASSA_1_FRIO 4
 // #define PIN_LED_MASSA_2_QUENTE 34
 // #define PIN_LED_MASSA_2_FRIO 35
-#define PIN_LED_ENTRADA_QUENTE 0
-#define PIN_LED_ENTRADA_FRIO 2
+#define PIN_LED_ENTRADA_QUENTE 2
+#define PIN_LED_ENTRADA_FRIO 0
 #define PIN_LED_CONEXAO_1 18
 #define PIN_LED_CONEXAO_2 32
 #define PIN_SENSORT 15
@@ -45,6 +45,7 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
 
     gpio_pad_select_gpio(PIN_BUZINA);
     gpio_set_direction(PIN_BUZINA, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_BUZINA, 1);
 
     gpio_pad_select_gpio(PIN_LED_MASSA_1_QUENTE);
     gpio_set_direction(PIN_LED_MASSA_1_QUENTE, GPIO_MODE_OUTPUT);
@@ -102,10 +103,8 @@ void peripherals_update_task(void *pvParameters) {
 
                             if (event->value == 1) {
                                 gpio_set_level(PIN_QUEIMADOR, 0);
-                                ESP_LOGI(TAG, "ligando queimador");
                             } else {
                                 gpio_set_level(PIN_QUEIMADOR, 1);
-                                ESP_LOGI(TAG, "Desligando queimador");
                             }
                         } break;
 
@@ -176,6 +175,28 @@ void peripherals_update_task(void *pvParameters) {
                             //         gpio_set_level(PIN_LED_MASSA_2_FRIO, 1);
                             //     }
                             // } break;
+
+                        case PERIF_LED_CONEXAO_1: {
+                            gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
+                            if (event->value == 1) {
+                                ESP_LOGI(TAG, "ligando conexao 1");
+                                gpio_set_level(PIN_LED_CONEXAO_1, 0);
+                            } else {
+                                ESP_LOGI(TAG, "desligando conexao 1");
+                                gpio_set_level(PIN_LED_CONEXAO_1, 1);
+                            }
+                        } break;
+
+                        case PERIF_LED_CONEXAO_2: {
+                            gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
+                            if (event->value == 1) {
+                                ESP_LOGI(TAG, "ligando conexao 2");
+                                gpio_set_level(PIN_LED_CONEXAO_2, 0);
+                            } else {
+                                ESP_LOGI(TAG, "desligando conexao 2");
+                                gpio_set_level(PIN_LED_CONEXAO_2, 1);
+                            }
+                        } break;
 
                         default:
 

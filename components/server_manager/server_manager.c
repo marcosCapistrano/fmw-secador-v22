@@ -17,6 +17,7 @@
 #include "lwip/err.h"
 #include "lwip/sys.h"
 #include "mdns.h"
+#include "nvs_flash.h"
 #include "storage.h"
 
 static const char *TAG = "SERVER_MANAGER";
@@ -25,26 +26,40 @@ static const char *TAG = "SERVER_MANAGER";
 #define WIFI_AP_PASS CONFIG_WIFI_AP_PASS
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
+    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
+        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
+        ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
+                 MAC2STR(event->mac), event->aid);
+    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
+        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
+        ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
+                 MAC2STR(event->mac), event->aid);
+    }
 }
 
 static void wifi_ap_init() {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
+    esp_netif_create_default_wifi_ap();
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, wifi_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL, NULL));
 
     wifi_config_t wifi_ap_config = {
         .ap = {
-            .ssid = WIFI_AP_SSID,
-            .password = WIFI_AP_SSID,
-            .max_connection = 6,
-            .beacon_interval = 100}};
+            .ssid = CONFIG_WIFI_AP_SSID,
+            .ssid_len = strlen(CONFIG_WIFI_AP_SSID),
+            .channel = 5,
+            .password = CONFIG_WIFI_AP_PASS,
+            .max_connection = 9,
+            .authmode = WIFI_AUTH_WPA_WPA2_PSK}};
 
-    esp_netif_create_default_wifi_ap();
+    if (strlen(CONFIG_WIFI_AP_PASS) == 0) {
+        wifi_ap_config.ap.authmode = WIFI_AUTH_OPEN;
+    }
+
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_ap_config));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -110,6 +125,7 @@ static esp_err_t ws_handler(httpd_req_t *req) {
         state_msg_t state_msg;
         if (id == 1) {
             if (server_manager->m1_sock_fd == -1) {  // First M1 Connect
+                ESP_LOGI(TAG, "MAssa 1 COnnected!!!!");
                 state_msg = state_msg_create(UPDATE, CONEXAO_1, 1);
                 xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
             }
@@ -120,6 +136,8 @@ static esp_err_t ws_handler(httpd_req_t *req) {
             xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
         } else if (id == 2) {
             if (server_manager->m2_sock_fd == -1) {  // First M2 Connect
+
+                ESP_LOGI(TAG, "MAssa 2 COnnected!!!!");
                 state_msg = state_msg_create(UPDATE, CONEXAO_2, 1);
                 xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
             }
@@ -139,22 +157,24 @@ static httpd_close_func_t on_close_session(httpd_handle_t *handle, int sock_fd) 
     server_manager_t server_manager = (server_manager_t)httpd_get_global_user_ctx(handle);
     QueueHandle_t state_manager_queue = server_manager->state_manager_queue;
 
-    ESP_LOGE(TAG, "Session closed: %d", sock_fd);
-    ESP_LOGE(TAG, "Massa 1 sockfd: %d", server_manager->m1_sock_fd);
-    ESP_LOGE(TAG, "Massa 2 sockfd: %d", server_manager->m2_sock_fd);
-
     state_msg_t state_msg;
 
     if (sock_fd == server_manager->m1_sock_fd) {
         server_manager->m1_sock_fd = -1;
+
+        ESP_LOGI(TAG, "MAssa 1 DIscOnnected!!!!");
         state_msg = state_msg_create(UPDATE, CONEXAO_1, 0);
         xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
     } else if (sock_fd == server_manager->m2_sock_fd) {
         server_manager->m1_sock_fd = -1;
         state_msg = state_msg_create(UPDATE, CONEXAO_2, 0);
+        ESP_LOGI(TAG, "MAssa 2 DIscOnnected!!!!");
         xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
     }
 
+    ESP_LOGI(TAG, "Somebody disconnected fd: %d", sock_fd);
+    ESP_LOGI(TAG, "Massa 1 fd: %d", server_manager->m1_sock_fd);
+    ESP_LOGI(TAG, "Massa 2 fd: %d", server_manager->m2_sock_fd);
     close(sock_fd);
 
     return ESP_OK;
@@ -192,7 +212,7 @@ static esp_err_t on_lote_id_url(httpd_req_t *req) {
     const char s[2] = "/";
     char *token = strtok(req->uri, s);
     token = strtok(NULL, s);
-    
+
     sprintf(path, "/spiffs/%s.txt", token);
 
     FILE *file = storage_open_file_r(path);
@@ -275,7 +295,7 @@ static httpd_handle_t server_init(server_manager_t server_manager) {
     httpd_config_t config = {
         .task_priority = tskIDLE_PRIORITY + 5,
         .stack_size = 4096,
-        .core_id = tskNO_AFFINITY,
+        .core_id = 1,
         .server_port = 80,
         .ctrl_port = 32768,
         .max_open_sockets = 7,
@@ -304,12 +324,6 @@ static httpd_handle_t server_init(server_manager_t server_manager) {
     }
 
     return server;
-}
-
-void start_mdns_service() {
-    mdns_init();
-    mdns_hostname_set("ausyx.local");
-    mdns_instance_name_set("Ausyx");
 }
 
 server_manager_t server_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t server_update_queue) {

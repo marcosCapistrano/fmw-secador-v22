@@ -1,4 +1,4 @@
-import { createSignal, onMount } from 'solid-js';
+import { createSignal, onMount, Show } from 'solid-js';
 import { SolidApexCharts } from 'solid-apexcharts';
 
 function App() {
@@ -19,7 +19,7 @@ function Header() {
 }
 
 function Container() {
-  const [loteID, setLoteID] = createSignal(1);
+  const [loteID, setLoteID] = createSignal(-1);
 
   return (
     <div class="w-screen p-10 bg-cool-gray-600">
@@ -64,11 +64,11 @@ function Lote(props) {
     list: [
       {
         name: 'Entrada',
-        data: [24, 27, 28, 27, 26, 25, 24, 23, 22]
+        data: []
       },
       {
         name: 'Massa 1',
-        data: [1, 2, 3]
+        data: []
       },
       {
         name: 'Massa 2',
@@ -89,15 +89,11 @@ function Lote(props) {
     },
     xaxis: {
       type: 'datetime',
-      categories: [
-        '2022-06-23 00:49:18',
-        '2022-06-23 00:50:00',
-        '2022-06-23 00:50:11'
-      ]
+      categories: []
     },
     tooltip: {
       x: {
-        format: 'dd/MM/yyyy HH:mm'
+        format: 'dd/MM/yyyy HH:mm:ss'
       }
     }
   });
@@ -162,7 +158,7 @@ function Lote(props) {
         let oldEntrada = 0;
         let oldMassa1 = 0;
         let oldMassa2 = 0;
-        for (let i = 0; i < rows.length-1; i++) {
+        for (let i = 0; i < rows.length - 1; i++) {
           const row = rows[i];
           let data = row.trim();
           data = data.split(',');
@@ -226,23 +222,33 @@ function LotesList(props) {
         console.log(data);
         let loteArray = data.split(',');
         console.log(loteArray);
-        setLotes(loteArray);
+
+        console.log(loteArray);
+        if ((loteArray[0] === "")) {
+          setLotes([]);
+        } else {
+          setLotes(loteArray);
+        }
       })
       .catch(error => console.log('Authorization failed : ' + error.message));
   });
 
   return (
-    <ul>
-      <For each={lotes()}>
-        {(lote, i) => (
-          <li>
-            <button onClick={() => props.setLoteID(Number(lote))}>
-              Lote {lote}
-            </button>
-          </li>
-        )}
-      </For>
-    </ul>
+    <Show
+      when={lotes() !== []}
+      fallback={<h1 class="text-3xl">Histórico vazio! Inicie um Lote!</h1>}>
+      <ul>
+        <For each={lotes()}>
+          {(lote, i) => (
+            <li>
+              <button onClick={() => props.setLoteID(Number(lote))}>
+                Lote {lote}
+              </button>
+            </li>
+          )}
+        </For>
+      </ul>
+    </Show>
   );
 }
 export default App;

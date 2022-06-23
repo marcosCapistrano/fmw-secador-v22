@@ -27,6 +27,7 @@
     "*.inc": "c",
     "*.ipp": "c",
     "fstream": "c",
-    "list.h": "c"
+    "list.h": "c",
+    "task.h": "c"
   }
 }

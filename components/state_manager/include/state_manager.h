@@ -13,11 +13,12 @@ typedef struct s_state_manager_t {
     uint8_t lote_number;
 
     uint8_t sensor_entrada;
-
     uint8_t sensor_massa_1;
     int64_t last_sensor_massa_1;
     uint8_t sensor_massa_2;
     int64_t last_sensor_massa_2;
+    uint64_t conexao_1;
+    uint64_t conexao_2;
 
     uint8_t sensor_entrada_min;
     uint8_t sensor_entrada_max;

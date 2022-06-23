@@ -133,10 +133,17 @@ CONFIG_PARTITION_TABLE_MD5=y
 #
 
 #
+# RTC
+#
+CONFIG_RTC_SDA_GPIO=21
+CONFIG_RTC_SCL_GPIO=22
+# end of RTC
+
+#
 # Servidor WEB
 #
-CONFIG_WIFI_AP_SSID="myssid"
-CONFIG_WIFI_AP_PASS="mypassword"
+CONFIG_WIFI_AP_SSID="PaliniAlves"
+CONFIG_WIFI_AP_PASS="12345678"
 # end of Servidor WEB
 
 #

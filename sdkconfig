@@ -142,8 +142,8 @@ CONFIG_RTC_SCL_GPIO=22
 #
 # Servidor WEB
 #
-CONFIG_WIFI_AP_SSID="myssid"
-CONFIG_WIFI_AP_PASS="mypassword"
+CONFIG_WIFI_AP_SSID="PaliniAlves"
+CONFIG_WIFI_AP_PASS="12345678"
 # end of Servidor WEB
 
 #
