@@ -118,7 +118,6 @@ function Lote(props) {
       .then(response => response.text())
       .then(data => {
         console.log(data);
-        data = data.replace(/ /g, '');
         const rows = data.split(';');
 
         let newSeries = {
@@ -163,12 +162,13 @@ function Lote(props) {
         let oldEntrada = 0;
         let oldMassa1 = 0;
         let oldMassa2 = 0;
-        for (let i = 0; i < rows.length; i++) {
+        for (let i = 0; i < rows.length-1; i++) {
           const row = rows[i];
-          let data = row.split(',');
-          let date = data[0];
-          let target = data[1];
-          let value = data[2];
+          let data = row.trim();
+          data = data.split(',');
+          let date = data[0].trim();
+          let target = data[1].trim();
+          let value = Number(data[2].trim());
 
           if (target == 'SENSOR_ENTRADA') {
             oldEntrada = value;
@@ -178,18 +178,26 @@ function Lote(props) {
             oldMassa2 = value;
           }
 
+          console.log(row);
+          console.log(date);
+          console.log(target);
+          console.log(value);
+
           newOptions.xaxis.categories.push(date);
           newSeries.list[0].data.push(oldEntrada);
-          newSeries.list[1].data.push(oldEntrada);
-          newSeries.list[2].data.push(oldEntrada);
+          newSeries.list[1].data.push(oldMassa1);
+          newSeries.list[2].data.push(oldMassa2);
         }
+
+        setOptions(newOptions);
+        setSeries(newSeries);
       })
       .catch(error => console.log('Authorization failed : ' + error.message));
   });
 
   return (
     <SolidApexCharts
-      width="500"
+      width="100%"
       type="area"
       options={options()}
       series={series().list}
