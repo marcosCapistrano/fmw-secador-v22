@@ -70,7 +70,9 @@
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/ulp/libulp.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/wifi_provisioning/libwifi_provisioning.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/main/libmain.a
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/algorithms/libalgorithms.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/common/libcommon.a
+/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp-ds3231/libesp-ds3231.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp32-owb/libesp32-owb.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp32-ds18b20/libesp32-ds18b20.a
 /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/esp_nextion/libesp_nextion.a

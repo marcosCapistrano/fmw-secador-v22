@@ -2014,6 +2014,40 @@
                     {
                         "children": [],
                         "depends_on": null,
+                        "help": null,
+                        "id": "RTC_SDA_GPIO",
+                        "name": "RTC_SDA_GPIO",
+                        "range": [
+                            0,
+                            33
+                        ],
+                        "title": "SDA GPIO",
+                        "type": "int"
+                    },
+                    {
+                        "children": [],
+                        "depends_on": null,
+                        "help": null,
+                        "id": "RTC_SCL_GPIO",
+                        "name": "RTC_SCL_GPIO",
+                        "range": [
+                            0,
+                            33
+                        ],
+                        "title": "SCL_GPIO",
+                        "type": "int"
+                    }
+                ],
+                "depends_on": null,
+                "id": "ausyx-secador-v2-rtc",
+                "title": "RTC",
+                "type": "menu"
+            },
+            {
+                "children": [
+                    {
+                        "children": [],
+                        "depends_on": null,
                         "help": "SSID que os ESP8266 ir\u00e3o se conectar",
                         "id": "WIFI_AP_SSID",
                         "name": "WIFI_AP_SSID",

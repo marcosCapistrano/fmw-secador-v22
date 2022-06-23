@@ -1,5 +1,17 @@
 menu "Ausyx Secador V2"
 
+menu "RTC"
+    config RTC_SDA_GPIO
+        int "SDA GPIO"
+        range 0 33
+        default 21
+    
+    config RTC_SCL_GPIO
+        int "SCL_GPIO"
+        range 0 33
+        default 22
+endmenu
+
 menu "Servidor WEB"
 
     config WIFI_AP_SSID

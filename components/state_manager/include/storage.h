@@ -3,6 +3,7 @@
 
 #include "inttypes.h"
 #include "nvs.h"
+#include "list.h"
 
 #define KEY_MODE "mode"
 #define KEY_LOTE_NUM "lote_number"
@@ -19,33 +20,33 @@
 
 void storage_write_file(const char *path, const char *data);
 FILE *storage_open_file_r(const char *path);
-void storage_list_files();
-void storage_close_file(FILE *f);
-void storage_init();
+ListEntry *storage_list_files(); 
+    void storage_close_file(FILE * f);
+    void storage_init();
 
-esp_err_t storage_get_mode(nvs_handle_t nvs_handle, uint8_t *mode);
-esp_err_t storage_set_mode(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_lote_number(nvs_handle_t nvs_handle, uint8_t *lote_number);
-esp_err_t storage_set_lote_number(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_entrada(nvs_handle_t nvs_handle, uint8_t *sensor_entrada);
-esp_err_t storage_set_sensor_entrada(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_massa_1(nvs_handle_t nvs_handle, uint8_t *sensor_massa_1);
-esp_err_t storage_set_sensor_massa_1(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_massa_2(nvs_handle_t nvs_handle, uint8_t *sensor_massa_2);
-esp_err_t storage_set_sensor_massa_2(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_entrada_min(nvs_handle_t nvs_handle, uint8_t *sensor_entrada_min);
-esp_err_t storage_set_sensor_entrada_min(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_entrada_max(nvs_handle_t nvs_handle, uint8_t *sensor_entrada_max);
-esp_err_t storage_set_sensor_entrada_max(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_massa_1_min(nvs_handle_t nvs_handle, uint8_t *sensor_massa_1_min);
-esp_err_t storage_set_sensor_massa_1_min(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_massa_1_max(nvs_handle_t nvs_handle, uint8_t *sensor_massa_1_max);
-esp_err_t storage_set_sensor_massa_1_max(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_massa_2_min(nvs_handle_t nvs_handle, uint8_t *sensor_massa_2_min);
-esp_err_t storage_set_sensor_massa_2_min(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_sensor_massa_2_max(nvs_handle_t nvs_handle, uint8_t *sensor_massa_2_max);
-esp_err_t storage_set_sensor_massa_2_max(nvs_handle_t nvs_handle, uint8_t value);
-esp_err_t storage_get_finished(nvs_handle_t nvs_handle, uint8_t *finished);
-esp_err_t storage_set_finished(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_mode(nvs_handle_t nvs_handle, uint8_t * mode);
+    esp_err_t storage_set_mode(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_lote_number(nvs_handle_t nvs_handle, uint8_t * lote_number);
+    esp_err_t storage_set_lote_number(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_entrada(nvs_handle_t nvs_handle, uint8_t * sensor_entrada);
+    esp_err_t storage_set_sensor_entrada(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_massa_1(nvs_handle_t nvs_handle, uint8_t * sensor_massa_1);
+    esp_err_t storage_set_sensor_massa_1(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_massa_2(nvs_handle_t nvs_handle, uint8_t * sensor_massa_2);
+    esp_err_t storage_set_sensor_massa_2(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_entrada_min(nvs_handle_t nvs_handle, uint8_t * sensor_entrada_min);
+    esp_err_t storage_set_sensor_entrada_min(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_entrada_max(nvs_handle_t nvs_handle, uint8_t * sensor_entrada_max);
+    esp_err_t storage_set_sensor_entrada_max(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_massa_1_min(nvs_handle_t nvs_handle, uint8_t * sensor_massa_1_min);
+    esp_err_t storage_set_sensor_massa_1_min(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_massa_1_max(nvs_handle_t nvs_handle, uint8_t * sensor_massa_1_max);
+    esp_err_t storage_set_sensor_massa_1_max(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_massa_2_min(nvs_handle_t nvs_handle, uint8_t * sensor_massa_2_min);
+    esp_err_t storage_set_sensor_massa_2_min(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_sensor_massa_2_max(nvs_handle_t nvs_handle, uint8_t * sensor_massa_2_max);
+    esp_err_t storage_set_sensor_massa_2_max(nvs_handle_t nvs_handle, uint8_t value);
+    esp_err_t storage_get_finished(nvs_handle_t nvs_handle, uint8_t * finished);
+    esp_err_t storage_set_finished(nvs_handle_t nvs_handle, uint8_t value);
 
 #endif

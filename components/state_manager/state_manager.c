@@ -7,6 +7,7 @@
 #include "common_ihm.h"
 #include "common_perif.h"
 #include "common_state.h"
+#include "ds3231.h"
 #include "esp_log.h"
 #include "esp_spiffs.h"
 #include "esp_system.h"
@@ -25,6 +26,23 @@ static void ihm_send(QueueHandle_t ihm_update_queue, ihm_event_t type, uint8_t t
 state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t ihm_update_queue, QueueHandle_t peripherals_update_queue) {
     state_manager_t state_manager = 0;
 
+    // Inicializa o RTC
+    i2c_dev_t rtc_dev;
+    if (ds3231_init_desc(&rtc_dev, I2C_NUM_0, CONFIG_RTC_SDA_GPIO, CONFIG_RTC_SCL_GPIO) != ESP_OK) {
+        ESP_LOGE(TAG, "Could not init device descriptor.");
+    } else {
+        ESP_LOGI(TAG, "Found RTC!");
+
+        struct tm rtcinfo;
+
+        if (ds3231_get_time(&rtc_dev, &rtcinfo) != ESP_OK) {
+            ESP_LOGE(TAG, "Could not get time.");
+        }
+
+        ESP_LOGI(TAG, "Current date:");
+        ESP_LOGI(TAG, "%04d-%02d-%02d%02d:%02d:%02d:000Z", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec);
+    }
+
     // Checa a EEPROM se estamos começando ou dando andamento em uma seca
     // Checamos o funcionamento do sensor físico e a conexão dos sensores remotos
     // Setamos os valores iniciais dos sensores e periféricos
@@ -41,12 +59,10 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
     } else {
         state_manager = (state_manager_t)malloc(sizeof(s_state_manager_t));
         state_manager->nvs_handle = nvs_handle;
+        state_manager->rtc_dev = rtc_dev;
         state_manager->ihm_update_queue = ihm_update_queue;
         state_manager->state_manager_queue = state_manager_queue;
         state_manager->peripherals_update_queue = peripherals_update_queue;
-
-        state_manager->last_sensor_massa_1 = 0;
-        state_manager->last_sensor_massa_2 = 0;
 
         state_manager->event_last_entrada = 2;
         state_manager->event_last_massa_1 = 2;
@@ -90,8 +106,6 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
 
         esp_err_t ret = esp_vfs_spiffs_register(&conf);
 
-        storage_list_files();
-
         vTaskDelay(pdMS_TO_TICKS(2000));
     }
 
@@ -107,20 +121,20 @@ static void check_sensor_entrada(state_manager_t state_manager) {
 
     if (current > max) {
         // Avisar temperatura alta
-        perif_send(peripherals_update_queue, ACT, QUEIMADOR, PERIF_RESP_NONE, 0);
-        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_QUEIMADOR, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
 
-        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 1);
     } else if (current < min) {
-        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
 
-        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
-        perif_send(peripherals_update_queue, ACT, QUEIMADOR, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_QUEIMADOR, PERIF_RESP_NONE, 1);
     } else {
-        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
 
-        perif_send(peripherals_update_queue, ACT, LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
-        perif_send(peripherals_update_queue, ACT, QUEIMADOR, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_QUEIMADOR, PERIF_RESP_NONE, 1);
     }
 }
 
@@ -133,15 +147,15 @@ static void check_sensor_massa_1(state_manager_t state_manager) {
 
     if (current > max) {
         // Avisar temperatura alta
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_FRIO, PERIF_RESP_NONE, 0);
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 1);
     } else if (current < min) {
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
         // Avisar temperatura baixa
     } else {
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
     }
 }
 
@@ -154,103 +168,93 @@ static void check_sensor_massa_2(state_manager_t state_manager) {
 
     if (current > max) {
         // Avisar temperatura alta
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_FRIO, PERIF_RESP_NONE, 0);
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_FRIO, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 1);
     } else if (current < min) {
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
         // Avisar temperatura baixa
     } else {
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
-        perif_send(peripherals_update_queue, ACT, LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
+        perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
     }
 }
 
 static void state_add_event(state_manager_t state_manager, state_target_t event_type, uint8_t value) {
     char path[50];
-    sprintf(path, "/spiffs/lote_%d.txt", state_manager->lote_number);
+    sprintf(path, "/spiffs/%d.txt", state_manager->lote_number);
 
-    time_t now;
-    char strftime_buf[64];
-    struct tm timeinfo;
-    time(&now);
-    struct tm tm = *localtime(&now);
     char message[500];
 
+    struct tm rtcinfo;
+    if (ds3231_get_time(&state_manager->rtc_dev, &rtcinfo) != ESP_OK) {
+        ESP_LOGE(TAG, "Could not get time.");
+    }
+
+    ESP_LOGI(TAG, "Current date:");
+    ESP_LOGI(TAG, "%04d-%02d-%02d%02d:%02d:%02d:000Z", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec);
+
     switch (event_type) {
-        ESP_LOGI("OI", "%02d-%02d-%d %02d:%02d:%02d", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
         case SENSOR_ENTRADA:
             if (state_manager->event_last_entrada != value) {
-                sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, ENTRADA, %d\n", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, value);
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, SENSOR_ENTRADA, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
                 storage_write_file(path, message);
+                state_manager->event_last_entrada = value;
             }
             break;
 
         case SENSOR_MASSA_1:
-            sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, MASSA_1, %d\n", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, value);
-            storage_write_file(path, message);
+            if (state_manager->event_last_massa_1 != value) {
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, SENSOR_MASSA_1, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
+                storage_write_file(path, message);
+
+                state_manager->event_last_massa_1 = value;
+            }
             break;
 
         case SENSOR_MASSA_2:
-            sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, MASSA_2, %d\n", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec, value);
-            storage_write_file(path, message);
-            break;
 
-        case ENTRADA_MIN:
-            if (state_manager->event_last_entrada_min != value) {
+            if (state_manager->event_last_massa_1 != value) {
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, SENSOR_MASSA_2, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
+                storage_write_file(path, message);
+
+                state_manager->event_last_massa_2 = value;
             }
             break;
 
-        case ENTRADA_MAX:
-            if (state_manager->event_last_entrada_max != value) {
+        case CONEXAO_1:
+            if (state_manager->event_last_conexao_1 != value) {
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, CONEXAO_1, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
+                storage_write_file(path, message);
+
+                state_manager->event_last_conexao_1 = value;
             }
             break;
 
-        case MASSA_1_MIN:
-            if (state_manager->event_last_massa_1_min != value) {
+        case CONEXAO_2:
+            if (state_manager->event_last_conexao_2 != value) {
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, CONEXAO_2, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
+                storage_write_file(path, message);
+
+            state_manager->event_last_conexao_2 = value;
             }
             break;
 
-        case MASSA_1_MAX:
-            if (state_manager->event_last_massa_1_max != value) {
+        case FINISHED:
+            if (state_manager->event_last_finished != value) {
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, FINISHED, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
+                storage_write_file(path, message);
+
+                state_manager->event_last_finished = value;
             }
             break;
 
-        case MASSA_2_MIN:
-            if (state_manager->event_last_massa_2_min != value) {
-            }
-            break;
+        case CENTRAL:
+            if (state_manager->event_last_central != value) {
+                sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, CENTRAL, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, value);
+                storage_write_file(path, message);
 
-        case MASSA_2_MAX:
-            if (state_manager->event_last_massa_2_max != value) {
-            }
-            break;
-
-            // case CONEXAO_1:
-            //     if (state_manager->event_last_conexao_1 != value) {
-            //         if (value == 1) {
-            //             sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, CONEXAO MASSA 1, OK", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
-            //             storage_write_file(path, message);
-            //         } else {
-            //             sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, CONEXAO MASSA 1, PERDIDA", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
-            //             storage_write_file(path, message);
-            //         }
-            //     }
-            //     break;
-
-            // case CONEXAO_2:
-            //     if (state_manager->event_last_conexao_2 != value) {
-            //         if (value == 1) {
-            //             sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, CONEXAO MASSA 2 OK", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
-            //             storage_write_file(path, message);
-            //         } else {
-            //             sprintf(message, "%02d-%02d-%d %02d:%02d:%02d, CONEXAO MASSA 2 PERDIDA", tm.tm_mon + 1, tm.tm_mday, tm.tm_year + 1900, tm.tm_hour, tm.tm_min, tm.tm_sec);
-            //         }
-            //     }
-            //     break;
-
-        case BUZINA:
-            if (state_manager->event_last_buzina != value) {
+                state_manager->event_last_central = value;
             }
             break;
 
@@ -295,7 +299,6 @@ void state_manager_task(void *pvParameters) {
                         case SENSOR_MASSA_1:
                             ESP_LOGI("TAG", "atualizando Massa 1");
                             state_manager->sensor_massa_1 = event->value;
-                            state_manager->last_sensor_massa_1 = esp_timer_get_time();
                             storage_set_sensor_massa_1(nvs_handle, state_manager->sensor_massa_1);
                             state_add_event(state_manager, SENSOR_MASSA_1, event->value);
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_1, state_manager->sensor_massa_1);
@@ -306,7 +309,6 @@ void state_manager_task(void *pvParameters) {
                         case SENSOR_MASSA_2:
                             ESP_LOGI("TAG", "atualizando Massa 2");
                             state_manager->sensor_massa_2 = event->value;
-                            state_manager->last_sensor_massa_2 = esp_timer_get_time();
                             storage_set_sensor_massa_2(nvs_handle, state_manager->sensor_massa_2);
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_2, state_manager->sensor_massa_2);
 
@@ -442,6 +444,10 @@ void state_manager_task(void *pvParameters) {
                         default:
                             break;
                     }
+                    break;
+
+                default:
+
                     break;
             }
         }

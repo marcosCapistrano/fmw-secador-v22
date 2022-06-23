@@ -1,4 +1,4 @@
-# Install script for directory: /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/components/ds3231
+# Install script for directory: /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/components/algorithms
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

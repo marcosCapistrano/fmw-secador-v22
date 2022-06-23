@@ -1,4 +1,4 @@
-# Install script for directory: /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/components/my_http_server
+# Install script for directory: /home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/components/esp-ds3231
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

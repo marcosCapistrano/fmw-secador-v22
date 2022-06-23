@@ -97,99 +97,83 @@ void peripherals_update_task(void *pvParameters) {
             switch (event->type) {
                 case ACT: {
                     switch (event->target) {
-                        case QUEIMADOR: {
+                        case PERIF_QUEIMADOR: {
                             gpio_pad_select_gpio(PIN_QUEIMADOR);
 
                             if (event->value == 1) {
                                 gpio_set_level(PIN_QUEIMADOR, 0);
                                 ESP_LOGI(TAG, "ligando queimador");
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, SENSOR_ENTRADA, 0);
                             } else {
-                                ESP_LOGI(TAG, "Desligando queimador");
                                 gpio_set_level(PIN_QUEIMADOR, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, SENSOR_ENTRADA, 1);
+                                ESP_LOGI(TAG, "Desligando queimador");
                             }
                         } break;
 
-                        case BUZINA: {
+                        case PERIF_BUZINA: {
                             gpio_pad_select_gpio(PIN_BUZINA);
 
                             if (event->value == 1) {
                                 gpio_set_level(PIN_BUZINA, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, PERIPHERAL_BUZINA, 0);
                             } else {
                                 gpio_set_level(PIN_BUZINA, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, PERIPHERAL_BUZINA, 1);
                             }
                         } break;
 
-                        case LED_ENTRADA_QUENTE: {
+                        case PERIF_LED_ENTRADA_QUENTE: {
                             gpio_pad_select_gpio(PIN_LED_ENTRADA_QUENTE);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_ENTRADA_QUENTE, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MAX, 0);
                             } else {
                                 gpio_set_level(PIN_LED_ENTRADA_QUENTE, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MAX, 1);
                             }
                         }
 
                         break;
 
-                        case LED_ENTRADA_FRIO: {
+                        case PERIF_LED_ENTRADA_FRIO: {
                             gpio_pad_select_gpio(PIN_LED_ENTRADA_FRIO);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_ENTRADA_FRIO, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MIN, 0);
                             } else {
                                 gpio_set_level(PIN_LED_ENTRADA_FRIO, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, ENTRADA_MIN, 1);
                             }
                         }
 
                         break;
 
-                        case LED_MASSA_1_QUENTE: {
+                        case PERIF_LED_MASSA_1_QUENTE: {
                             gpio_pad_select_gpio(PIN_LED_MASSA_1_QUENTE);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_MASSA_1_QUENTE, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MAX, 0);
                             } else {
                                 gpio_set_level(PIN_LED_MASSA_1_QUENTE, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MAX, 1);
                             }
                         } break;
 
-                        case LED_MASSA_1_FRIO: {
+                        case PERIF_LED_MASSA_1_FRIO: {
                             gpio_pad_select_gpio(PIN_LED_MASSA_1_FRIO);
                             if (event->value == 1) {
                                 gpio_set_level(PIN_LED_MASSA_1_FRIO, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MIN, 0);
                             } else {
                                 gpio_set_level(PIN_LED_MASSA_1_FRIO, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_1_MIN, 1);
                             }
                         } break;
 
-                            // case LED_MASSA_2_QUENTE: {
+                            // case PERIF_LED_MASSA_2_QUENTE: {
                             //     gpio_pad_select_gpio(PIN_LED_MASSA_2_QUENTE);
                             //     if (event->value == 1) {
                             //         gpio_set_level(PIN_LED_MASSA_2_QUENTE, 0);
-                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MAX, 0);
                             //     } else {
                             //         gpio_set_level(PIN_LED_MASSA_2_QUENTE, 1);
-                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MIN, 1);
                             //     }
                             // } break;
 
-                            // case LED_MASSA_2_FRIO: {
+                            // case PERIF_LED_MASSA_2_FRIO: {
                             //     gpio_pad_select_gpio(PIN_LED_MASSA_2_FRIO);
                             //     if (event->value == 1) {
                             //         gpio_set_level(PIN_LED_MASSA_2_FRIO, 0);
-                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MIN, 0);
                             //     } else {
                             //         gpio_set_level(PIN_LED_MASSA_2_FRIO, 1);
-                            // state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, MASSA_2_MIN, 1);
                             //     }
                             // } break;
 
@@ -199,47 +183,11 @@ void peripherals_update_task(void *pvParameters) {
                     }
                 } break;
 
-                case PERIF_RESPONSE: {
-                    int64_t curr_time = esp_timer_get_time();
-                    int64_t last_time_sensor = event->value;
-                    ESP_LOGI(TAG, "LAST SENSOR: %d", (int)last_time_sensor);
+                default:
 
-                    switch (event->resp_type) {
-                        case MASSA_1: {
-                            gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
-                            if (curr_time - last_time_sensor > 1 * 10E6) {
-                                ESP_LOGI("CONEXAO 1", "DESLIGANDO");
-                                gpio_set_level(PIN_LED_CONEXAO_1, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_1, 0);
-                            } else {
-                                ESP_LOGI("CONEXAO 1", "LIGANDO");
-                                gpio_set_level(PIN_LED_CONEXAO_1, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_1, 1);
-                            }
-                        } break;
-
-                        case MASSA_2: {
-                            gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
-                            if (curr_time - last_time_sensor > 1 * 10E6) {
-                                ESP_LOGI("CONEXAO 2", "DESLIGANDO");
-                                gpio_set_level(PIN_LED_CONEXAO_2, 0);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_2, 0);
-                            } else {
-                                ESP_LOGI("CONEXAO 2", "LIGANDO");
-                                gpio_set_level(PIN_LED_CONEXAO_2, 1);
-                                state_msg_send(state_manager_queue, state_msg, PERIPHERAL_UPDATE, CONEXAO_2, 1);
-                            }
-                        } break;
-
-                        default:
-
-                            break;
-                    }
-                } break;
+                    break;
             }
         }
-
-        // Requisita ultimas vezs que sensores comunicaram
     }
 }
 
@@ -248,9 +196,6 @@ void peripherals_monitor_task(void *pvParameters) {
     QueueHandle_t state_manager_queue = peripherals_manager->state_manager_queue;
 
     state_msg_t event_entrada = state_msg_create(UPDATE, SENSOR_ENTRADA, 0);
-
-    state_msg_t event_request_last_m1 = state_msg_create(REQUEST, LAST_SENSOR_MASSA_1, 0);
-    state_msg_t event_request_last_m2 = state_msg_create(REQUEST, LAST_SENSOR_MASSA_2, 0);
 
     // Create a 1-Wire bus, using the RMT timeslot driver
     OneWireBus *owb;
@@ -277,9 +222,6 @@ void peripherals_monitor_task(void *pvParameters) {
     owb_use_parasitic_power(owb, parasitic_power);
 
     for (;;) {
-        xQueueSend(state_manager_queue, &event_request_last_m1, portMAX_DELAY);
-        xQueueSend(state_manager_queue, &event_request_last_m2, portMAX_DELAY);
-
         // TODO pegar temperatura da ENTRADA e enviar tmb
         ds18b20_convert_all(owb);
         ds18b20_wait_for_conversion(device);

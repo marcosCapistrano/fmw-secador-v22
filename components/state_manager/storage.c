@@ -1,9 +1,10 @@
 #include "storage.h"
-
+#include "string.h"
 #include "dirent.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
+#include "list.h"
 #include "nvs.h"
 #include "stdlib.h"
 #include "sys/stat.h"
@@ -52,15 +53,20 @@ void storage_write_file(const char *path, const char *data) {
     storage_close_file(f);
 }
 
-void storage_list_files() {
+ListEntry *storage_list_files() {
+    ListEntry *list = NULL;
+
     DIR *dir = opendir("/spiffs");
     struct dirent *entry;
 
     while ((entry = readdir(dir)) != NULL) {
-        char full_path[300];
-        sprintf(full_path, "/spiffs/%s", entry->d_name);
-        ESP_LOGI("FILES", "Found: %s", full_path);
+        size_t len = strlen(entry->d_name);
+        if (len <= 8) {
+            list_append(&list, atoi(entry->d_name));
+        }
     }
+
+    return list;
 }
 
 esp_err_t storage_get_mode(nvs_handle_t nvs_handle, uint8_t *mode) {

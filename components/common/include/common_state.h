@@ -21,7 +21,7 @@ typedef enum state_target_t {
 	LAST_SENSOR_MASSA_1,
 	SENSOR_MASSA_2,
 	LAST_SENSOR_MASSA_2,
-	PERIPHERAL_BUZINA,
+	BUZINA,
 	CONEXAO_1,
 	CONEXAO_2,
 	
@@ -32,7 +32,8 @@ typedef enum state_target_t {
 	MASSA_2_MIN,
 	MASSA_2_MAX,
 
-	FINISHED
+	FINISHED,
+	CENTRAL
 } state_target_t;
 
 typedef struct s_state_msg_t *state_msg_t;

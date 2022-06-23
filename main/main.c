@@ -6,10 +6,10 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "ihm_manager.h"
-#include "server_manager.h"
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "peripherals_manager.h"
+#include "server_manager.h"
 #include "state_manager.h"
 
 void app_main(void) {
@@ -35,6 +35,6 @@ void app_main(void) {
     xTaskCreatePinnedToCore(ihm_input_task, "UART INPUT TASK", 2048, ihm_manager, 4, NULL, 1);
     xTaskCreatePinnedToCore(ihm_update_task, "IHM UPDATE TASK", 2048, ihm_manager, 3, NULL, 1);
     xTaskCreatePinnedToCore(state_manager_task, "STATE MANAGER TASK", 10000, state_manager, 5, NULL, 1);
-    xTaskCreatePinnedToCore(peripherals_update_task, "PERIF MANAGER TASK", 9000, peripherals_manager, 1, NULL, 0);
-    xTaskCreatePinnedToCore(peripherals_monitor_task, "PERIF MANAGER TASK", 5000, peripherals_manager, 2, NULL, 0);
+    xTaskCreatePinnedToCore(peripherals_update_task, "PERIF UPDATE TASK", 9000, peripherals_manager, 1, NULL, 0);
+    xTaskCreatePinnedToCore(peripherals_monitor_task, "PERIF MONITOR TASK", 5000, peripherals_manager, 2, NULL, 0);
 }

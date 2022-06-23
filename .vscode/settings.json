@@ -24,6 +24,9 @@
     "optional": "c",
     "system_error": "c",
     "regex": "c",
-    "*.inc": "c"
+    "*.inc": "c",
+    "*.ipp": "c",
+    "fstream": "c",
+    "list.h": "c"
   }
 }

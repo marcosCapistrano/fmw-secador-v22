@@ -1,6 +1,7 @@
 #ifndef STATE_MANAGER_H
 #define STATE_MANAGER_H
 
+#include "ds3231.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/queue.h"
 #include "inttypes.h"
@@ -44,7 +45,10 @@ typedef struct s_state_manager_t {
     uint8_t event_last_conexao_1;
     uint8_t event_last_conexao_2;
     uint8_t event_last_buzina;
+    uint8_t event_last_finished;
+    uint8_t event_last_central;
 
+    i2c_dev_t rtc_dev;
     nvs_handle_t nvs_handle;
     QueueHandle_t ihm_update_queue;
     QueueHandle_t state_manager_queue;
