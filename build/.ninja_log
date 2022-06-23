@@ -1470,3 +1470,16 @@
 15	98	1655935833544790122	bootloader/bootloader.map	a4b6927727fac93e
 16	114	0	esp-idf/main/CMakeFiles/spiffs_storage_bin	28c8229844d410a3
 114	21707	0	CMakeFiles/flash	fdf4872a8173ccba
+2353	2530	1655935833544790122	bootloader-prefix/src/bootloader-stamp/bootloader-build	a4b6927727fac93e
+2353	2530	1655935833544790122	bootloader/bootloader.elf	a4b6927727fac93e
+2353	2530	1655935833544790122	bootloader/bootloader.bin	a4b6927727fac93e
+2353	2530	1655935833544790122	bootloader/bootloader.map	a4b6927727fac93e
+2353	2542	0	esp-idf/esptool_py/CMakeFiles/app_check_size	15bc6c7c7b4803d7
+2354	2602	0	esp-idf/main/CMakeFiles/spiffs_storage_bin	28c8229844d410a3
+21	79	0	esp-idf/esptool_py/CMakeFiles/app_check_size	15bc6c7c7b4803d7
+21	102	1655935833544790122	bootloader-prefix/src/bootloader-stamp/bootloader-build	a4b6927727fac93e
+21	102	1655935833544790122	bootloader/bootloader.elf	a4b6927727fac93e
+21	102	1655935833544790122	bootloader/bootloader.bin	a4b6927727fac93e
+21	102	1655935833544790122	bootloader/bootloader.map	a4b6927727fac93e
+26	134	0	esp-idf/main/CMakeFiles/spiffs_storage_bin	28c8229844d410a3
+134	22791	0	CMakeFiles/flash	fdf4872a8173ccba
