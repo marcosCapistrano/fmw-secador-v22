@@ -19,7 +19,6 @@ static esp_err_t storage_get_u8(nvs_handle_t nvs_handle, const char *key, uint8_
 static esp_err_t storage_set_u8(nvs_handle_t nvs_handle, const char *key, uint8_t value);
 
 FILE *storage_open_file_r(const char *path) {
-    ESP_LOGI("TAG", "OPENING FILE: %s", path);
     FILE *f = fopen(path, "r");
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for writing");
@@ -43,7 +42,6 @@ void storage_close_file(FILE *f) {
 }
 
 void storage_write_file(const char *path, const char *data) {
-    ESP_LOGI("STORAGE", "WRITING FILE %s", path);
     FILE *f = storage_open_file_w(path);
     if (f == NULL) {
         ESP_LOGE(TAG, "Failed to open file for writing");

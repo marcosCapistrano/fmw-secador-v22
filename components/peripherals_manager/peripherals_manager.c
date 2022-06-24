@@ -182,10 +182,8 @@ void peripherals_update_task(void *pvParameters) {
                         case PERIF_LED_CONEXAO_1: {
                             gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
                             if (event->value == 1) {
-                                ESP_LOGI(TAG, "ligando conexao 1");
                                 gpio_set_level(PIN_LED_CONEXAO_1, 1);
                             } else {
-                                ESP_LOGI(TAG, "desligando conexao 1");
                                 gpio_set_level(PIN_LED_CONEXAO_1, 0);
                             }
                         } break;
@@ -193,10 +191,8 @@ void peripherals_update_task(void *pvParameters) {
                         case PERIF_LED_CONEXAO_2: {
                             gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
                             if (event->value == 1) {
-                                ESP_LOGI(TAG, "ligando conexao 2");
                                 gpio_set_level(PIN_LED_CONEXAO_2, 1);
                             } else {
-                                ESP_LOGI(TAG, "desligando conexao 2");
                                 gpio_set_level(PIN_LED_CONEXAO_2, 0);
                             }
                         } break;
@@ -213,6 +209,8 @@ void peripherals_update_task(void *pvParameters) {
             }
         }
     }
+
+    free(event);
 }
 
 void peripherals_monitor_task(void *pvParameters) {

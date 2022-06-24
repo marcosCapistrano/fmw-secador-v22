@@ -27,15 +27,6 @@ static const char *TAG = "SERVER_MANAGER";
 #define WIFI_AP_PASS CONFIG_WIFI_AP_PASS
 
 static void wifi_event_handler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data) {
-    if (event_id == WIFI_EVENT_AP_STACONNECTED) {
-        wifi_event_ap_staconnected_t *event = (wifi_event_ap_staconnected_t *)event_data;
-        ESP_LOGI(TAG, "station " MACSTR " join, AID=%d",
-                 MAC2STR(event->mac), event->aid);
-    } else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) {
-        wifi_event_ap_stadisconnected_t *event = (wifi_event_ap_stadisconnected_t *)event_data;
-        ESP_LOGI(TAG, "station " MACSTR " leave, AID=%d",
-                 MAC2STR(event->mac), event->aid);
-    }
 }
 
 static void wifi_ap_init() {
@@ -71,7 +62,6 @@ static void wifi_ap_init() {
 
 static esp_err_t ws_handler(httpd_req_t *req) {
     if (req->method == HTTP_GET) {
-        ESP_LOGI(TAG, "Handshake done, the new connection was opened");
         return ESP_OK;
     }
 
@@ -85,7 +75,6 @@ static esp_err_t ws_handler(httpd_req_t *req) {
         ESP_LOGE(TAG, "httpd_ws_recv_frame failed to get frame len with %d", ret);
         return ret;
     }
-    ESP_LOGI(TAG, "frame len is %d", ws_pkt.len);
     if (ws_pkt.len) {
         /* ws_pkt.len + 1 is for NULL termination as we are expecting a string */
         buf = calloc(1, ws_pkt.len + 1);
@@ -122,11 +111,9 @@ static esp_err_t ws_handler(httpd_req_t *req) {
         }
 
         int sock_fd = httpd_req_to_sockfd(req);
-        ESP_LOGI(TAG, "Received from %d", sock_fd);
         state_msg_t state_msg;
         if (id == 1) {
             if (server_manager->m1_sock_fd == -1) {  // First M1 Connect
-                ESP_LOGI(TAG, "MAssa 1 COnnected!!!!");
                 state_msg = state_msg_create(UPDATE, CONEXAO_1, 1);
                 xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
             }
@@ -139,7 +126,6 @@ static esp_err_t ws_handler(httpd_req_t *req) {
         } else if (id == 2) {
             if (server_manager->m2_sock_fd == -1) {  // First M2 Connect
 
-                ESP_LOGI(TAG, "MAssa 2 COnnected!!!!");
                 state_msg = state_msg_create(UPDATE, CONEXAO_2, 1);
                 xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
             }
@@ -165,19 +151,15 @@ static httpd_close_func_t on_close_session(httpd_handle_t *handle, int sock_fd) 
     if (sock_fd == server_manager->m1_sock_fd) {
         server_manager->m1_sock_fd = -1;
 
-        ESP_LOGI(TAG, "MAssa 1 DIscOnnected!!!!");
         state_msg = state_msg_create(UPDATE, CONEXAO_1, 0);
         xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
     } else if (sock_fd == server_manager->m2_sock_fd) {
-        server_manager->m1_sock_fd = -1;
+        server_manager->m2_sock_fd = -1;
+
         state_msg = state_msg_create(UPDATE, CONEXAO_2, 0);
-        ESP_LOGI(TAG, "MAssa 2 DIscOnnected!!!!");
         xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
     }
 
-    ESP_LOGI(TAG, "Somebody disconnected fd: %d", sock_fd);
-    ESP_LOGI(TAG, "Massa 1 fd: %d", server_manager->m1_sock_fd);
-    ESP_LOGI(TAG, "Massa 2 fd: %d", server_manager->m2_sock_fd);
     close(sock_fd);
 
     return ESP_OK;
@@ -356,8 +338,8 @@ server_manager_t server_manager_init(QueueHandle_t state_manager_queue, QueueHan
     server_manager->m1_sock_fd = -1;
     server_manager->m2_sock_fd = -1;
     server_manager->server = server_init(server_manager);
-    server_manager->m1_timer = xTimerCreate("TIMER MASSA 1", pdMS_TO_TICKS(20000), pdTRUE, server_manager, disconnect_m1);
-    server_manager->m2_timer = xTimerCreate("TIMER MASSA 2", pdMS_TO_TICKS(20000), pdTRUE, server_manager, disconnect_m2);
+    server_manager->m1_timer = xTimerCreate("TIMER MASSA 1", pdMS_TO_TICKS(100000), pdTRUE, server_manager, disconnect_m1);
+    server_manager->m2_timer = xTimerCreate("TIMER MASSA 2", pdMS_TO_TICKS(100000), pdTRUE, server_manager, disconnect_m2);
 
     xTimerStart(server_manager->m1_timer, portMAX_DELAY);
     xTimerStart(server_manager->m2_timer, portMAX_DELAY);

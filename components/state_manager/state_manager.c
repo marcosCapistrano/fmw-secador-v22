@@ -49,7 +49,6 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
     // - Alarme: OFF
     // - Queimador: ON
 
-    ESP_LOGI(TAG, "Abrindo armazenamento não-volátil...");
     nvs_handle_t nvs_handle;
 
     esp_err_t err = nvs_open("storage", NVS_READWRITE, &nvs_handle);
@@ -94,10 +93,6 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
         ESP_ERROR_CHECK(storage_get_sensor_massa_2_min(nvs_handle, &state_manager->sensor_massa_2_min));
         ESP_ERROR_CHECK(storage_get_sensor_massa_2_max(nvs_handle, &state_manager->sensor_massa_2_max));
         ESP_ERROR_CHECK(storage_get_finished(nvs_handle, &state_manager->finished));
-
-        ESP_LOGI(TAG, "carregados valores do nvs");
-
-        ESP_LOGI(TAG, "Initializing SPIFFS");
 
         esp_vfs_spiffs_conf_t conf = {
             .base_path = "/spiffs",
@@ -257,9 +252,6 @@ static void state_add_event_no_check(state_manager_t state_manager, state_target
         ESP_LOGE(TAG, "Could not get time.");
     }
 
-    ESP_LOGI(TAG, "Current date:");
-    ESP_LOGI(TAG, "%04d-%02d-%02d%02d:%02d:%02d:000Z", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec);
-
     switch (event_type) {
         case SENSOR_ENTRADA: {
             sprintf(message, "%04d-%02d-%d %02d:%02d:%02d, SENSOR_ENTRADA, %d;", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec, state_manager->event_last_entrada);
@@ -301,9 +293,6 @@ static void state_add_event(state_manager_t state_manager, state_target_t event_
     if (ds3231_get_time(&state_manager->rtc_dev, &rtcinfo) != ESP_OK) {
         ESP_LOGE(TAG, "Could not get time.");
     }
-
-    ESP_LOGI(TAG, "Current date:");
-    ESP_LOGI(TAG, "%04d-%02d-%02d%02d:%02d:%02d:000Z", rtcinfo.tm_year, rtcinfo.tm_mon + 1, rtcinfo.tm_mday, rtcinfo.tm_hour, rtcinfo.tm_min, rtcinfo.tm_sec);
 
     switch (event_type) {
         case SENSOR_ENTRADA:
@@ -434,7 +423,6 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case SENSOR_MASSA_1:
-                            ESP_LOGI("TAG", "atualizando Massa 1: %d", event->value);
                             state_manager->sensor_massa_1 = event->value;
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_1, state_manager->sensor_massa_1);
 
@@ -446,7 +434,6 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case SENSOR_MASSA_2:
-                            ESP_LOGI("TAG", "atualizando Massa 2: %d", event->value);
                             state_manager->sensor_massa_2 = event->value;
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_2, state_manager->sensor_massa_2);
 
@@ -458,7 +445,6 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case CONEXAO_1:
-                            ESP_LOGI("TAG", "atualizando Conexao Massa 1");
                             state_manager->conexao_1 = event->value;
 
                             perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_1, PERIF_RESP_NONE, event->value);
@@ -470,7 +456,6 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case CONEXAO_2:
-                            ESP_LOGI("TAG", "atualizando Conexao Massa 2");
                             state_manager->conexao_2 = event->value;
 
                             perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_2, PERIF_RESP_NONE, event->value);
@@ -580,12 +565,10 @@ void state_manager_task(void *pvParameters) {
 
                         case LAST_SENSOR_MASSA_1:
                             perif_send(peripherals_update_queue, PERIF_RESPONSE, PERIF_NONE, MASSA_1, state_manager->last_sensor_massa_1);
-                            ESP_LOGI(TAG, "SENDING 1:%d", (int)state_manager->last_sensor_massa_1);
                             break;
 
                         case LAST_SENSOR_MASSA_2:
                             perif_send(peripherals_update_queue, PERIF_RESPONSE, PERIF_NONE, MASSA_2, state_manager->last_sensor_massa_2);
-                            ESP_LOGI(TAG, "SENDING 2:%d", (int)state_manager->last_sensor_massa_1);
                             break;
 
                         case ENTRADA_MIN:

@@ -54,7 +54,6 @@ void ihm_input_task(void *pvParameters) {
                     break;
 
                 default:
-                    ESP_LOGI(TAG, "Unknown Event: %d", event.type);
                     break;
             }
         }
@@ -70,7 +69,6 @@ void ihm_update_task(void *pvParameters) {
             switch (event->type) {
                 case PAGE:
                     ihm_manager->current_page = event->value;
-                    ESP_LOGI("UPDATE_TASK", "Changing page to: %d", ihm_manager->current_page);
                     ihm_change_page_to(event->value);
                     break;
 
@@ -81,6 +79,8 @@ void ihm_update_task(void *pvParameters) {
 
                     break;
             }
+
+            free(event);
         }
     }
 }
