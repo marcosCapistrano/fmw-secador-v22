@@ -177,7 +177,7 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             sprintf(target_str, "tNewLote");
             sprintf(command_str, "%s.txt=\"Lote %d\"", target_str, value);
             ihm_send(command_str);
-            } 
+        }
     } else if (page_num == 3) {
         if (target == TARGET_LOTE_NUMBER) {
             sprintf(target_str, "tLoteAndamento");
@@ -207,15 +207,27 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             sprintf(target_str, "nMassa1");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
-
-            sprintf(command_str, "%s.pco=65535", target_str);
-            ihm_send(command_str);
         } else if (target == TARGET_MASSA_2) {
             sprintf(target_str, "nMassa2");
             sprintf(command_str, "%s.val=%d", target_str, value);
             ihm_send(command_str);
+        } else if (target == TARGET_CONEXAO_1) {
+            sprintf(target_str, "nMassa1");
 
-            sprintf(command_str, "%s.pco=65535", target_str);
+            if (value == 1) {
+                sprintf(command_str, "%s.pco=65535", target_str);
+            } else if (value == 0) {
+                sprintf(command_str, "%s.pco=16711680", target_str);
+            }
+            ihm_send(command_str);
+        } else if (target == TARGET_CONEXAO_2) {
+            sprintf(target_str, "nMassa2");
+
+            if (value == 1) {
+                sprintf(command_str, "%s.pco=65535", target_str);
+            } else if (value == 0) {
+                sprintf(command_str, "%s.pco=16711680", target_str);
+            }
             ihm_send(command_str);
         }
     } else if (page_num == 4) {

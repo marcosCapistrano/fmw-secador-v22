@@ -64,6 +64,10 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
         state_manager->state_manager_queue = state_manager_queue;
         state_manager->peripherals_update_queue = peripherals_update_queue;
 
+        state_manager->sensor_entrada = 0;
+        state_manager->sensor_massa_1 = 0;
+        state_manager->sensor_massa_2 = 0;
+
         state_manager->event_last_entrada = 0;
         state_manager->event_last_massa_1 = 0;
         state_manager->event_last_massa_2 = 0;
@@ -83,9 +87,6 @@ state_manager_t state_manager_init(QueueHandle_t state_manager_queue, QueueHandl
 
         ESP_ERROR_CHECK(storage_get_mode(nvs_handle, &state_manager->mode));
         ESP_ERROR_CHECK(storage_get_lote_number(nvs_handle, &state_manager->lote_number));
-        ESP_ERROR_CHECK(storage_get_sensor_entrada(nvs_handle, &state_manager->sensor_entrada));
-        ESP_ERROR_CHECK(storage_get_sensor_massa_1(nvs_handle, &state_manager->sensor_massa_1));
-        ESP_ERROR_CHECK(storage_get_sensor_massa_2(nvs_handle, &state_manager->sensor_massa_2));
         ESP_ERROR_CHECK(storage_get_sensor_entrada_min(nvs_handle, &state_manager->sensor_entrada_min));
         ESP_ERROR_CHECK(storage_get_sensor_entrada_max(nvs_handle, &state_manager->sensor_entrada_max));
         ESP_ERROR_CHECK(storage_get_sensor_massa_1_min(nvs_handle, &state_manager->sensor_massa_1_min));
@@ -373,7 +374,6 @@ void state_manager_task(void *pvParameters) {
 
                         case SENSOR_ENTRADA:
                             state_manager->sensor_entrada = event->value;
-                            storage_set_sensor_entrada(nvs_handle, state_manager->sensor_entrada);
                             ihm_send(ihm_update_queue, VALUE, TARGET_ENTRADA, state_manager->sensor_entrada);
 
                             if (state_manager->finished == 0) {
@@ -390,7 +390,6 @@ void state_manager_task(void *pvParameters) {
                         case SENSOR_MASSA_1:
                             ESP_LOGI("TAG", "atualizando Massa 1");
                             state_manager->sensor_massa_1 = event->value;
-                            storage_set_sensor_massa_1(nvs_handle, state_manager->sensor_massa_1);
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_1, state_manager->sensor_massa_1);
 
                             if (state_manager->finished == 0) {
@@ -404,7 +403,6 @@ void state_manager_task(void *pvParameters) {
                         case SENSOR_MASSA_2:
                             ESP_LOGI("TAG", "atualizando Massa 2");
                             state_manager->sensor_massa_2 = event->value;
-                            storage_set_sensor_massa_2(nvs_handle, state_manager->sensor_massa_2);
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_2, state_manager->sensor_massa_2);
 
                             if (state_manager->finished == 0) {
@@ -421,6 +419,7 @@ void state_manager_task(void *pvParameters) {
 
                             // ihm_send(ihm_update_queue, VALUE, CONEXAO_1, event->value);
                             perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_1, PERIF_RESP_NONE, event->value);
+                            ihm_send(ihm_update_queue, VALUE, TARGET_CONEXAO_1, event->value);
 
                             if (state_manager->finished == 0) {
                                 ESP_LOGE(TAG, "Finished ta 0");
@@ -433,6 +432,7 @@ void state_manager_task(void *pvParameters) {
                             state_manager->conexao_2 = event->value;
 
                             perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_1, PERIF_RESP_NONE, event->value);
+                            ihm_send(ihm_update_queue, VALUE, TARGET_CONEXAO_2, event->value);
 
                             // ihm_send(ihm_update_queue, VALUE, CONEXAO_2, event->value);
 
@@ -508,17 +508,16 @@ void state_manager_task(void *pvParameters) {
                             break;
 
                         case SENSOR_ENTRADA:
-                            storage_get_sensor_entrada(nvs_handle, &state_manager->sensor_entrada);
                             ihm_send(ihm_update_queue, VALUE, TARGET_ENTRADA, state_manager->sensor_entrada);
                             break;
 
                         case SENSOR_MASSA_1:
-                            storage_get_sensor_massa_1(nvs_handle, &state_manager->sensor_massa_1);
+                            ihm_send(ihm_update_queue, VALUE, TARGET_CONEXAO_1, state_manager->conexao_1);
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_1, state_manager->sensor_massa_1);
                             break;
 
                         case SENSOR_MASSA_2:
-                            storage_get_sensor_massa_2(nvs_handle, &state_manager->sensor_massa_2);
+                            ihm_send(ihm_update_queue, VALUE, TARGET_CONEXAO_2, state_manager->conexao_2);
                             ihm_send(ihm_update_queue, VALUE, TARGET_MASSA_2, state_manager->sensor_massa_2);
                             break;
 

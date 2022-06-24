@@ -85,30 +85,6 @@ esp_err_t storage_set_lote_number(nvs_handle_t nvs_handle, uint8_t value) {
     return storage_set_u8(nvs_handle, KEY_LOTE_NUM, value);
 }
 
-esp_err_t storage_get_sensor_entrada(nvs_handle_t nvs_handle, uint8_t *sensor_entrada) {
-    return storage_get_u8(nvs_handle, KEY_SENSOR_ENTRADA, sensor_entrada);
-}
-
-esp_err_t storage_set_sensor_entrada(nvs_handle_t nvs_handle, uint8_t value) {
-    return storage_set_u8(nvs_handle, KEY_SENSOR_ENTRADA, value);
-}
-
-esp_err_t storage_get_sensor_massa_1(nvs_handle_t nvs_handle, uint8_t *sensor_massa_1) {
-    return storage_get_u8(nvs_handle, KEY_SENSOR_MASSA_1, sensor_massa_1);
-}
-
-esp_err_t storage_set_sensor_massa_1(nvs_handle_t nvs_handle, uint8_t value) {
-    return storage_set_u8(nvs_handle, KEY_SENSOR_MASSA_1, value);
-}
-
-esp_err_t storage_get_sensor_massa_2(nvs_handle_t nvs_handle, uint8_t *sensor_massa_2) {
-    return storage_get_u8(nvs_handle, KEY_SENSOR_MASSA_2, sensor_massa_2);
-}
-
-esp_err_t storage_set_sensor_massa_2(nvs_handle_t nvs_handle, uint8_t value) {
-    return storage_set_u8(nvs_handle, KEY_SENSOR_MASSA_2, value);
-}
-
 esp_err_t storage_get_sensor_entrada_min(nvs_handle_t nvs_handle, uint8_t *sensor_entrada_min) {
     return storage_get_u8(nvs_handle, KEY_SENSOR_ENTRADA_MIN, sensor_entrada_min);
 }

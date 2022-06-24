@@ -67,9 +67,11 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
 
     gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
     gpio_set_direction(PIN_LED_CONEXAO_1, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_LED_CONEXAO_1, 0);
 
     gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
     gpio_set_direction(PIN_LED_CONEXAO_2, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_LED_CONEXAO_2, 0);
 
     gpio_pad_select_gpio(PIN_SENSORT);
     gpio_set_direction(PIN_SENSORT, GPIO_MODE_INPUT);
@@ -180,10 +182,10 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
                             if (event->value == 1) {
                                 ESP_LOGI(TAG, "ligando conexao 1");
-                                gpio_set_level(PIN_LED_CONEXAO_1, 0);
+                                gpio_set_level(PIN_LED_CONEXAO_1, 1);
                             } else {
                                 ESP_LOGI(TAG, "desligando conexao 1");
-                                gpio_set_level(PIN_LED_CONEXAO_1, 1);
+                                gpio_set_level(PIN_LED_CONEXAO_1, 0);
                             }
                         } break;
 
@@ -191,10 +193,10 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
                             if (event->value == 1) {
                                 ESP_LOGI(TAG, "ligando conexao 2");
-                                gpio_set_level(PIN_LED_CONEXAO_2, 0);
+                                gpio_set_level(PIN_LED_CONEXAO_2, 1);
                             } else {
                                 ESP_LOGI(TAG, "desligando conexao 2");
-                                gpio_set_level(PIN_LED_CONEXAO_2, 1);
+                                gpio_set_level(PIN_LED_CONEXAO_2, 0);
                             }
                         } break;
 
