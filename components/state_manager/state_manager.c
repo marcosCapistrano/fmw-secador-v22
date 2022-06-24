@@ -127,18 +127,26 @@ static _Bool check_sensor_entrada(state_manager_t state_manager) {
         perif_send(peripherals_update_queue, ACT, PERIF_QUEIMADOR, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 1);
-        buzina = true;
+
+        if (current > max + 7) {
+            buzina = true;
+        }
     } else if (current < min) {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
 
         perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_FRIO, PERIF_RESP_NONE, 1);
         perif_send(peripherals_update_queue, ACT, PERIF_QUEIMADOR, PERIF_RESP_NONE, 1);
-        buzina = true;
+
+        if (current < min - 7) {
+            buzina = true;
+        }
     } else {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_QUENTE, PERIF_RESP_NONE, 0);
 
         perif_send(peripherals_update_queue, ACT, PERIF_LED_ENTRADA_FRIO, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_QUEIMADOR, PERIF_RESP_NONE, 1);
+
+        state_manager->is_aware_entrada = false;
     }
 
     return buzina;
@@ -157,15 +165,25 @@ static _Bool check_sensor_massa_1(state_manager_t state_manager) {
         // Avisar temperatura alta
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_FRIO, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 1);
-        buzina = true;
+
+        if (current > max + 7 && !state_manager->is_aware_massa_1) {
+            ihm_send(ihm_update_queue, PAGE, TARGET_NONE, 10);
+            buzina = true;
+        }
     } else if (current < min) {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_FRIO, PERIF_RESP_NONE, 1);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
+
+        if (current < min - 7) {
+            buzina = true;
+        }
         buzina = true;
         // Avisar temperatura baixa
     } else {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_FRIO, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_1_QUENTE, PERIF_RESP_NONE, 0);
+
+        state_manager->is_aware_massa_1 = false;
     }
 
     return buzina;
@@ -185,16 +203,23 @@ static _Bool check_sensor_massa_2(state_manager_t state_manager) {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_FRIO, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 1);
 
-        buzina = true;
+        if (current > max + 7) {
+            buzina = true;
+        }
     } else if (current < min) {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_FRIO, PERIF_RESP_NONE, 1);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
         // Avisar temperatura baixa
 
-        buzina = true;
+
+        if (current < min - 7) {
+            buzina = true;
+        }
     } else {
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_FRIO, PERIF_RESP_NONE, 0);
         perif_send(peripherals_update_queue, ACT, PERIF_LED_MASSA_2_QUENTE, PERIF_RESP_NONE, 0);
+
+        state_manager->is_aware_massa_2 = false;
     }
 
     return buzina;
@@ -417,7 +442,6 @@ void state_manager_task(void *pvParameters) {
                             ESP_LOGI("TAG", "atualizando Conexao Massa 1");
                             state_manager->conexao_1 = event->value;
 
-                            // ihm_send(ihm_update_queue, VALUE, CONEXAO_1, event->value);
                             perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_1, PERIF_RESP_NONE, event->value);
                             ihm_send(ihm_update_queue, VALUE, TARGET_CONEXAO_1, event->value);
 
@@ -431,10 +455,8 @@ void state_manager_task(void *pvParameters) {
                             ESP_LOGI("TAG", "atualizando Conexao Massa 2");
                             state_manager->conexao_2 = event->value;
 
-                            perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_1, PERIF_RESP_NONE, event->value);
+                            perif_send(peripherals_update_queue, ACT, PERIF_LED_CONEXAO_2, PERIF_RESP_NONE, event->value);
                             ihm_send(ihm_update_queue, VALUE, TARGET_CONEXAO_2, event->value);
-
-                            // ihm_send(ihm_update_queue, VALUE, CONEXAO_2, event->value);
 
                             if (state_manager->finished == 0) {
                                 ESP_LOGE(TAG, "Finished ta 0");
