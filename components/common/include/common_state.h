@@ -24,6 +24,10 @@ typedef enum state_target_t {
 	BUZINA,
 	CONEXAO_1,
 	CONEXAO_2,
+
+	IS_AWARE_ENTRADA,
+	IS_AWARE_MASSA_1,
+	IS_AWARE_MASSA_2,
 	
 	ENTRADA_MIN,
 	ENTRADA_MAX,

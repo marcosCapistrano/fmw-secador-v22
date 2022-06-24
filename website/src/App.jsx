@@ -172,6 +172,24 @@ function Lote(props) {
             oldMassa1 = value;
           } else if (target == 'SENSOR_MASSA_2') {
             oldMassa2 = value;
+          } else if (target == 'CONEXAO_1') {
+            newOptions.xaxis.categories.push(date);
+            newSeries.list[0].data.push(oldEntrada);
+            newSeries.list[1].data.push(oldMassa1);
+            newSeries.list[2].data.push(oldMassa2);
+
+            if (value == 0) {
+              oldMassa1 = 0;
+            }
+          } else if (target == 'CONEXAO_2') {
+            newOptions.xaxis.categories.push(date);
+            newSeries.list[0].data.push(oldEntrada);
+            newSeries.list[1].data.push(oldMassa1);
+            newSeries.list[2].data.push(oldMassa2);
+
+            if (value == 0) {
+              oldMassa2 = 1;
+            }
           }
 
           console.log(row);
@@ -224,7 +242,7 @@ function LotesList(props) {
         console.log(loteArray);
 
         console.log(loteArray);
-        if ((loteArray[0] === "")) {
+        if (loteArray[0] === '') {
           setLotes([]);
         } else {
           setLotes(loteArray);

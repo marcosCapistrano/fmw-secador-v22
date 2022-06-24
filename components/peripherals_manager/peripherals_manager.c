@@ -42,6 +42,7 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
 
     gpio_pad_select_gpio(PIN_QUEIMADOR);
     gpio_set_direction(PIN_QUEIMADOR, GPIO_MODE_OUTPUT);
+    gpio_set_level(PIN_QUEIMADOR, 0);
 
     gpio_pad_select_gpio(PIN_BUZINA);
     gpio_set_direction(PIN_BUZINA, GPIO_MODE_OUTPUT);

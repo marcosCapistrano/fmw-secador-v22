@@ -1,5 +1,5 @@
 #include "storage.h"
-#include "string.h"
+
 #include "dirent.h"
 #include "esp_log.h"
 #include "freertos/FreeRTOS.h"
@@ -7,6 +7,7 @@
 #include "list.h"
 #include "nvs.h"
 #include "stdlib.h"
+#include "string.h"
 #include "sys/stat.h"
 #include "sys/unistd.h"
 
@@ -167,9 +168,11 @@ esp_err_t storage_get_u8(nvs_handle_t nvs_handle, const char *key, uint8_t *out_
     if (err != ESP_OK) {
         if (err == ESP_ERR_NVS_NOT_FOUND) {
             if (strcmp(key, KEY_FINISHED) == 0 || strcmp(key, KEY_LOTE_NUM) == 0) {
-            storage_set_u8(nvs_handle, key, 1);
+                storage_set_u8(nvs_handle, key, 1);
+            } else if (strcmp(key, KEY_SENSOR_ENTRADA_MAX) == 0 || strcmp(key, KEY_SENSOR_MASSA_1_MAX) == 0 || strcmp(key, KEY_SENSOR_MASSA_2_MAX) == 0) {
+                storage_set_u8(nvs_handle, key, 50);
             } else {
-            storage_set_u8(nvs_handle, key, 0);
+                storage_set_u8(nvs_handle, key, 0);
             }
 
             return storage_get_u8(nvs_handle, key, out_value);

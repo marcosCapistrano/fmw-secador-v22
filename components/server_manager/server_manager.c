@@ -12,6 +12,7 @@
 #include "esp_wifi.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "freertos/timers.h"
 #include "freertos/task.h"
 #include "list.h"
 #include "lwip/err.h"
@@ -131,6 +132,7 @@ static esp_err_t ws_handler(httpd_req_t *req) {
             }
 
             server_manager->m1_sock_fd = sock_fd;
+            xTimerReset(server_manager->m1_timer, portMAX_DELAY);
 
             state_msg_t state_msg = state_msg_create(UPDATE, SENSOR_MASSA_1, temp_to_send);
             xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
@@ -143,6 +145,7 @@ static esp_err_t ws_handler(httpd_req_t *req) {
             }
 
             server_manager->m2_sock_fd = sock_fd;
+            xTimerReset(server_manager->m2_timer, portMAX_DELAY);
 
             state_msg_t state_msg = state_msg_create(UPDATE, SENSOR_MASSA_2, temp_to_send);
             xQueueSend(state_manager_queue, &state_msg, 0);
@@ -326,6 +329,24 @@ static httpd_handle_t server_init(server_manager_t server_manager) {
     return server;
 }
 
+static void disconnect_m1(TimerHandle_t xTimer) {
+    server_manager_t server_manager = (server_manager_t)pvTimerGetTimerID(xTimer);
+    QueueHandle_t state_manager_queue = server_manager->state_manager_queue;
+
+    server_manager->m1_sock_fd = -1;
+    state_msg_t state_msg = state_msg_create(UPDATE, CONEXAO_1, 0);
+    xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
+}
+
+static void disconnect_m2(TimerHandle_t xTimer) {
+    server_manager_t server_manager = (server_manager_t)pvTimerGetTimerID(xTimer);
+    QueueHandle_t state_manager_queue = server_manager->state_manager_queue;
+
+    server_manager->m2_sock_fd = -1;
+    state_msg_t state_msg = state_msg_create(UPDATE, CONEXAO_2, 0);
+    xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
+}
+
 server_manager_t server_manager_init(QueueHandle_t state_manager_queue, QueueHandle_t server_update_queue) {
     wifi_ap_init();
 
@@ -335,6 +356,11 @@ server_manager_t server_manager_init(QueueHandle_t state_manager_queue, QueueHan
     server_manager->m1_sock_fd = -1;
     server_manager->m2_sock_fd = -1;
     server_manager->server = server_init(server_manager);
+    server_manager->m1_timer = xTimerCreate("TIMER MASSA 1", pdMS_TO_TICKS(20000), pdTRUE, server_manager, disconnect_m1);
+    server_manager->m2_timer = xTimerCreate("TIMER MASSA 2", pdMS_TO_TICKS(20000), pdTRUE, server_manager, disconnect_m2);
+
+    xTimerStart(server_manager->m1_timer, portMAX_DELAY);
+    xTimerStart(server_manager->m2_timer, portMAX_DELAY);
 
     return server_manager;
 }

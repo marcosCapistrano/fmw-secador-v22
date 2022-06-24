@@ -122,6 +122,18 @@ static void ihm_process_data(ihm_manager_t ihm_manager, uint8_t *data, uint8_t s
                 ihm_send_update(ihm_manager, UPDATE, FINISHED, 1);
             } else if (ihm_manager->current_page == 1) {  // Iniciar novo
                 ihm_send_update(ihm_manager, UPDATE, FINISHED, 0);
+            } else if (ihm_manager->current_page == 9) {  // Iniciar novo
+                ihm_send_update(ihm_manager, UPDATE, IS_AWARE_ENTRADA, 1);
+            } else if (ihm_manager->current_page == 10) {  // Iniciar novo
+                ihm_send_update(ihm_manager, UPDATE, IS_AWARE_ENTRADA, 1);
+            } else if (ihm_manager->current_page == 11) {  // Iniciar novo
+                ihm_send_update(ihm_manager, UPDATE, IS_AWARE_MASSA_1, 1);
+            } else if (ihm_manager->current_page == 12) {  // Iniciar novo
+                ihm_send_update(ihm_manager, UPDATE, IS_AWARE_MASSA_1, 1);
+            } else if (ihm_manager->current_page == 13) {  // Iniciar novo
+                ihm_send_update(ihm_manager, UPDATE, IS_AWARE_MASSA_2, 1);
+            } else if (ihm_manager->current_page == 14) {  // Iniciar novo
+                ihm_send_update(ihm_manager, UPDATE, IS_AWARE_MASSA_2, 1);
             }
         } else if (head == 102) {  // Page event
             ihm_manager->current_page = data[index + 1];
@@ -217,7 +229,7 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             if (value == 1) {
                 sprintf(command_str, "%s.pco=65535", target_str);
             } else if (value == 0) {
-                sprintf(command_str, "%s.pco=16711680", target_str);
+                sprintf(command_str, "%s.pco=61440", target_str);
             }
             ihm_send(command_str);
         } else if (target == TARGET_CONEXAO_2) {
@@ -226,7 +238,7 @@ static void ihm_change_value_to(uint8_t target, uint8_t value, int page_num) {
             if (value == 1) {
                 sprintf(command_str, "%s.pco=65535", target_str);
             } else if (value == 0) {
-                sprintf(command_str, "%s.pco=16711680", target_str);
+                sprintf(command_str, "%s.pco=61440", target_str);
             }
             ihm_send(command_str);
         }
