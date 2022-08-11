@@ -32,9 +32,14 @@ if(NOT DEFINED CMAKE_CROSSCOMPILING)
   set(CMAKE_CROSSCOMPILING "TRUE")
 endif()
 
+# Set default install directory permissions.
+if(NOT DEFINED CMAKE_OBJDUMP)
+  set(CMAKE_OBJDUMP "/home/marcoscapistrano/.espressif/tools/xtensa-esp32-elf/esp-2021r2-patch3-8.4.0/xtensa-esp32-elf/bin/xtensa-esp32-elf-objdump")
+endif()
+
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
-  include("/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/esp-idf/mbedtls/mbedtls/cmake_install.cmake")
+  include("/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/esp-idf/mbedtls/mbedtls/cmake_install.cmake")
 
 endif()
 

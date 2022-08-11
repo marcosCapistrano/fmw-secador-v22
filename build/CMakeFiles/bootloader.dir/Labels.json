@@ -2,34 +2,34 @@
 	"sources" : 
 	[
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/CMakeFiles/bootloader"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/CMakeFiles/bootloader"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/CMakeFiles/bootloader.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/CMakeFiles/bootloader.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/CMakeFiles/bootloader-complete.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/CMakeFiles/bootloader-complete.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-download.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-install.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-mkdir.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-configure.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-patch.rule"
 		},
 		{
-			"file" : "/home/marcoscapistrano/Documents/Ausyx/fmw-secador-v2/build/bootloader-prefix/src/bootloader-stamp/bootloader-build.rule"
+			"file" : "/home/marcoscapistrano/Projects/ausyx/fmw-secador-v22/build/bootloader-prefix/src/bootloader-stamp/bootloader-update.rule"
 		}
 	],
 	"target" : 

@@ -338,8 +338,8 @@ server_manager_t server_manager_init(QueueHandle_t state_manager_queue, QueueHan
     server_manager->m1_sock_fd = -1;
     server_manager->m2_sock_fd = -1;
     server_manager->server = server_init(server_manager);
-    server_manager->m1_timer = xTimerCreate("TIMER MASSA 1", pdMS_TO_TICKS(100000), pdTRUE, server_manager, disconnect_m1);
-    server_manager->m2_timer = xTimerCreate("TIMER MASSA 2", pdMS_TO_TICKS(100000), pdTRUE, server_manager, disconnect_m2);
+    server_manager->m1_timer = xTimerCreate("TIMER MASSA 1", pdMS_TO_TICKS(15000), pdTRUE, server_manager, disconnect_m1);
+    server_manager->m2_timer = xTimerCreate("TIMER MASSA 2", pdMS_TO_TICKS(15000), pdTRUE, server_manager, disconnect_m2);
 
     xTimerStart(server_manager->m1_timer, portMAX_DELAY);
     xTimerStart(server_manager->m2_timer, portMAX_DELAY);

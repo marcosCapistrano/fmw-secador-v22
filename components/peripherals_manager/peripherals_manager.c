@@ -46,7 +46,7 @@ peripherals_manager_t peripherals_manager_init(QueueHandle_t state_manager_queue
 
     gpio_pad_select_gpio(PIN_BUZINA);
     gpio_set_direction(PIN_BUZINA, GPIO_MODE_OUTPUT);
-    gpio_set_level(PIN_BUZINA, 1);
+    gpio_set_level(PIN_BUZINA, 0);
 
     gpio_pad_select_gpio(PIN_LED_MASSA_1_QUENTE);
     gpio_set_direction(PIN_LED_MASSA_1_QUENTE, GPIO_MODE_OUTPUT);
@@ -88,6 +88,8 @@ static void state_msg_send(QueueHandle_t state_manager_queue, state_msg_t state_
     xQueueSend(state_manager_queue, &state_msg, portMAX_DELAY);
 }
 
+_Bool isM1Connected = false;
+_Bool isM2Connected = false;
 void peripherals_update_task(void *pvParameters) {
     peripherals_manager_t peripherals_manager = (peripherals_manager_t)pvParameters;
     QueueHandle_t state_manager_queue = peripherals_manager->state_manager_queue;
@@ -105,9 +107,9 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_QUEIMADOR);
 
                             if (event->value == 1) {
-                                gpio_set_level(PIN_QUEIMADOR, 0);
-                            } else {
                                 gpio_set_level(PIN_QUEIMADOR, 1);
+                            } else {
+                                gpio_set_level(PIN_QUEIMADOR, 0);
                             }
                         } break;
 
@@ -115,9 +117,11 @@ void peripherals_update_task(void *pvParameters) {
                             gpio_pad_select_gpio(PIN_BUZINA);
 
                             if (event->value == 1) {
-                                gpio_set_level(PIN_BUZINA, 0);
-                            } else {
+                                ESP_LOGI(TAG, "Changing buzina to 1");
                                 gpio_set_level(PIN_BUZINA, 1);
+                            } else {
+                                ESP_LOGI(TAG, "Changing buzina to 0");
+                                gpio_set_level(PIN_BUZINA, 0);
                             }
                         } break;
 
@@ -182,18 +186,26 @@ void peripherals_update_task(void *pvParameters) {
                         case PERIF_LED_CONEXAO_1: {
                             gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
                             if (event->value == 1) {
+                                isM1Connected = true;
+                                if(isM2Connected) {
                                 gpio_set_level(PIN_LED_CONEXAO_1, 1);
+                                }
                             } else {
+                                isM1Connected = false;
                                 gpio_set_level(PIN_LED_CONEXAO_1, 0);
                             }
                         } break;
 
                         case PERIF_LED_CONEXAO_2: {
-                            gpio_pad_select_gpio(PIN_LED_CONEXAO_2);
+                            gpio_pad_select_gpio(PIN_LED_CONEXAO_1);
                             if (event->value == 1) {
-                                gpio_set_level(PIN_LED_CONEXAO_2, 1);
+                                isM2Connected = true;
+                                if(isM1Connected) {
+                                gpio_set_level(PIN_LED_CONEXAO_1, 1);
+                                }
                             } else {
-                                gpio_set_level(PIN_LED_CONEXAO_2, 0);
+                                isM2Connected = false;
+                                gpio_set_level(PIN_LED_CONEXAO_1, 0);
                             }
                         } break;
 
